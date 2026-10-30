@@ -24,6 +24,20 @@
           <span>API Connected (Port 5000)</span>
         </div>
 
+        <select id="voice-select" class="voice-dropdown" onchange="onVoiceSelected(this.value)" title="Choose Instructor Voice">
+          <option value="">🎙️ Loading Natural Voices...</option>
+        </select>
+
+        <button class="btn-ctrl" id="btn-voice-toggle" onclick="toggleVoiceAudio()" title="Toggle Voice Narration" style="width:auto; padding:0 8px; font-size:11px; gap:4px;">
+          <span id="voice-toggle-icon">🎙️</span>
+          <span id="voice-toggle-lbl">Voice: ON</span>
+        </button>
+
+        <button class="btn-ctrl" id="btn-bgm-toggle" onclick="toggleBgMusic()" title="Toggle Background Ambience (Off by default for absolute silence)" style="width:auto; padding:0 8px; font-size:11px; gap:4px;">
+          <span id="bgm-toggle-icon">🔇</span>
+          <span id="bgm-toggle-lbl">BGM: OFF</span>
+        </button>
+
         <div class="lang-toggle-wrap">
           <button class="btn-lang active-lang" id="lang-en" onclick="setLanguage('en')">EN</button>
           <button class="btn-lang" id="lang-telugish" onclick="setLanguage('telugish')">Telugish (Hyderabad)</button>

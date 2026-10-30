@@ -1,4 +1,5 @@
 // d:\pace\client\js\app.js
+// Interactive Visual Lesson Player Engine: Dynamic Staging, Karaoke Subtitles, & JVMS Trace
 
 const PlayerState = {
   manifest: null,
@@ -10,6 +11,7 @@ const PlayerState = {
   playbackSpeed: 1.0,
   cachedSteps: {},
   stepTimer: null,
+  activeTimelineTimers: [],
   ideSubStep: 0,
   isGeneratingApi: false,
   subtitlesVisible: true,
@@ -40,6 +42,17 @@ function initDomReferences() {
   DOM.subtitleText = document.getElementById('live-subtitle-txt');
 }
 
+function clearAllActiveTimers() {
+  if (PlayerState.stepTimer) {
+    clearTimeout(PlayerState.stepTimer);
+    PlayerState.stepTimer = null;
+  }
+  if (PlayerState.activeTimelineTimers && PlayerState.activeTimelineTimers.length > 0) {
+    PlayerState.activeTimelineTimers.forEach(t => clearTimeout(t));
+    PlayerState.activeTimelineTimers = [];
+  }
+}
+
 // 1. BOOT SEQUENCE
 async function bootPlayerApp() {
   initDomReferences();
@@ -47,13 +60,14 @@ async function bootPlayerApp() {
   initKeyboardShortcuts();
 
   console.log('[PlayerApp] Booting client player...');
-  
+
   // 1. Fetch Manifest
   const manifest = await window.LessonAPI.fetchManifest();
   if (manifest) {
     PlayerState.manifest = manifest;
     PlayerState.totalSteps = manifest.totalSteps || 3;
-    document.getElementById('lesson-header-title').textContent = manifest.title_en;
+    const titleEl = document.getElementById('lesson-header-title');
+    if (titleEl) titleEl.textContent = manifest.title_en;
   }
 
   // 2. Pre-fetch Step 1 and Step 2
@@ -65,24 +79,15 @@ async function bootPlayerApp() {
   if (s1) PlayerState.cachedSteps[1] = s1;
   if (s2) PlayerState.cachedSteps[2] = s2;
 
-  // 3. Render initial Step 1
-  loadAndRenderStep(1);
-
-  // 4. Initialize Lo-Fi BGM on first user interaction
-  window.addEventListener('click', () => {
-    window.AudioEngine.initLofiBgm();
-  }, { once: true });
+  // 3. Render initial Step 1 in ready state
+  loadAndRenderStep(1, false);
 }
 
 // 2. STEP RENDERER & ORCHESTRATION
-async function loadAndRenderStep(stepNumber) {
+async function loadAndRenderStep(stepNumber, autoStart = true) {
   if (stepNumber < 1 || stepNumber > PlayerState.totalSteps) return;
 
-  // Clear timers
-  if (PlayerState.stepTimer) {
-    clearTimeout(PlayerState.stepTimer);
-    PlayerState.stepTimer = null;
-  }
+  clearAllActiveTimers();
   window.Typewriter.cancelAll();
   window.AudioEngine.stopSpeech();
 
@@ -99,7 +104,22 @@ async function loadAndRenderStep(stepNumber) {
   if (!stepData) return;
 
   renderStepView(stepData);
-  runStepPresentation(stepData);
+
+  if (autoStart) {
+    PlayerState.isPlaying = true;
+    updatePlayPauseIconUI();
+    runStepPresentation(stepData);
+  } else {
+    // Show ready state
+    const isTelugish = PlayerState.language === 'telugish';
+    setSubtitleText(isTelugish ? stepData.narration_telugish : stepData.narration_en);
+    // Reveal components for immediate exploration while paused
+    document.querySelectorAll('.staged-element, .staged-from-left, .staged-from-right, .staged-pop')
+      .forEach(el => el.classList.add('revealed'));
+    if (stepNumber === 2) {
+      setTimeout(drawRemoteLaserBeams, 60);
+    }
+  }
 }
 
 // Dynamic API Call for Step 3
@@ -112,7 +132,6 @@ async function fetchDynamicStep3() {
   const startTime = Date.now();
   const generated = await window.LessonAPI.generateStep(3, PlayerState.language);
 
-  // Smooth perception delay so student appreciates dynamic synthesis
   const elapsed = Date.now() - startTime;
   if (elapsed < 600) {
     await new Promise(r => setTimeout(r, 600 - elapsed));
@@ -126,7 +145,7 @@ async function fetchDynamicStep3() {
     const pill3 = document.getElementById('step-pill-3');
     if (pill3) {
       pill3.classList.remove('pill-api-badge');
-      pill3.innerHTML = '<span>Step 3: Watching Memory Move</span> <span style="font-size:9px; background:#34d399; color:#09090b; padding:1px 5px; border-radius:3px;">LIVE API</span>';
+      pill3.innerHTML = '<span>Step 3: Watching Memory Move</span> <span style="font-size:9px; background:#34d399; color:#09090b; padding:1px 5px; border-radius:3px; font-weight:800;">LIVE API</span>';
     }
     window.AudioEngine.playWhoosh();
   }
@@ -145,14 +164,14 @@ function renderStepView(stepData) {
   DOM.bodyMount.innerHTML = '';
 
   if (stepData.step === 1) {
-    // Step 1: Two Rooms + 30-Sec Mystery
+    // Step 1: Two Rooms + 30-Sec Mystery (Initial Staged Hidden State)
     const c1 = stepData.cards[0];
     const c2 = stepData.cards[1];
     const pz = stepData.puzzle;
 
     DOM.bodyMount.innerHTML = `
       <div class="step1-grid">
-        <div class="room-card room-desk" id="card-desk">
+        <div class="room-card room-desk staged-from-left" id="card-desk">
           <div>
             <div class="room-badge">${c1.badge}</div>
             <div class="room-title">${isTelugish ? c1.title_telugish : c1.title_en}</div>
@@ -163,14 +182,14 @@ function renderStepView(stepData) {
           </div>
         </div>
 
-        <div class="room-card room-warehouse" id="card-warehouse">
+        <div class="room-card room-warehouse staged-from-right" id="card-warehouse">
           <div>
             <div class="room-badge">${c2.badge}</div>
             <div class="room-title">${isTelugish ? c2.title_telugish : c2.title_en}</div>
             <div class="room-desc" id="c2-desc">${isTelugish ? c2.desc_telugish : c2.desc_en}</div>
           </div>
           
-          <div class="puzzle-box">
+          <div class="puzzle-box staged-pop" id="card-puzzle">
             <div style="font-size:10.5px; font-weight:800; color:var(--accent-amber); font-family:var(--font-mono);">${pz.badge}</div>
             <pre class="code-snippet" style="margin:4px 0;">${pz.code}</pre>
             <div style="font-size:11.5px; color:#fafafa; margin-top:4px;">${isTelugish ? pz.question_telugish : pz.question_en}</div>
@@ -184,7 +203,7 @@ function renderStepView(stepData) {
       <div class="step2-sandbox" id="step2-sandbox">
         <svg id="laser-wire-svg"></svg>
         <div class="remotes-column">
-          <div class="remote-box remote-active" id="remote-box-1">
+          <div class="remote-box remote-active staged-from-left" id="remote-box-1">
             <div class="remote-header">
               <span>${stepData.remote1.name}</span>
               <span class="freq-tag">${stepData.remote1.freq}</span>
@@ -196,7 +215,7 @@ function renderStepView(stepData) {
             </div>
           </div>
 
-          <div class="remote-box" id="remote-box-2">
+          <div class="remote-box staged-from-left" id="remote-box-2">
             <div class="remote-header">
               <span>${stepData.remote2.name}</span>
               <span class="freq-tag">${stepData.remote2.freq}</span>
@@ -210,7 +229,7 @@ function renderStepView(stepData) {
         </div>
 
         <div class="tv-column">
-          <div class="smart-tv-device" id="smart-tv-box">
+          <div class="smart-tv-device staged-from-right" id="smart-tv-box">
             <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:800; color:var(--accent-emerald); font-family:var(--font-mono);">
               <span>${stepData.tv.label}</span>
               <span>${stepData.tv.address}</span>
@@ -221,19 +240,17 @@ function renderStepView(stepData) {
               <div style="font-size:10px; color:#71717a; margin-top:6px;">Active Remotes Pointing Here: <span id="tv-remotes-count" style="color:var(--accent-emerald); font-weight:800;">2</span></div>
             </div>
           </div>
-          <div style="margin-top:12px; font-size:11.5px; background:#0d0d11; border:1px solid #27272a; border-radius:6px; padding:8px 12px; color:#cbd5e1;">
+          <div class="staged-pop" id="golden-rule-box" style="margin-top:12px; font-size:11.5px; background:#0d0d11; border:1px solid #27272a; border-radius:6px; padding:8px 12px; color:#cbd5e1; width:100%;">
             ${isTelugish ? stepData.goldenAnchor_telugish : stepData.goldenAnchor_en}
           </div>
         </div>
       </div>
     `;
-
-    setTimeout(drawRemoteLaserBeams, 60);
   } else if (stepData.step === 3) {
     // Step 3: JVMS Dual IDE & Live Memory Visualizer
     DOM.bodyMount.innerHTML = `
       <div class="step3-ide-grid">
-        <div class="ide-editor-panel">
+        <div class="ide-editor-panel staged-from-left" id="step3-ide-panel">
           <div style="display:flex; justify-content:space-between; color:#71717a; font-size:10px; margin-bottom:6px; border-bottom:1px solid #27272a; padding-bottom:4px;">
             <span>MemoryMasterclass.java</span>
             <span id="ide-active-frame-lbl" style="color:var(--accent-blue);">FRAME: main()</span>
@@ -246,7 +263,7 @@ function renderStepView(stepData) {
           </div>
         </div>
 
-        <div class="mem-inspector-panel">
+        <div class="mem-inspector-panel staged-from-right" id="step3-mem-panel">
           <div class="mem-card-slot" style="border-left:3px solid var(--accent-indigo);">
             <div class="mem-slot-header" style="color:var(--accent-indigo);">
               <span>CALL STACK (JVMS §2.6 LIFO FRAMES)</span>
@@ -271,48 +288,245 @@ function renderStepView(stepData) {
   }
 }
 
-// 3. STEP PRESENTATION RUNNER (Live Typewriter & Speech)
+// 3. STEP PRESENTATION RUNNER (Live Empty-Blackboard Staging & Karaoke Speech)
 function runStepPresentation(stepData) {
+  clearAllActiveTimers();
+  window.Typewriter.cancelAll();
+
   const isTelugish = PlayerState.language === 'telugish';
   const narration = isTelugish ? stepData.narration_telugish : stepData.narration_en;
   const title = isTelugish ? stepData.title_telugish : stepData.title_en;
   const desc = isTelugish ? stepData.subtitle_telugish : stepData.subtitle_en;
+  const speed = PlayerState.playbackSpeed || 1.0;
 
   // Stream header letter-by-letter live
   window.Typewriter.stream('step-title-live', title, 16, () => {
     window.Typewriter.stream('step-desc-live', desc, 14);
   });
 
-  // Set live teleprompter caption
+  // Render Subtitles with Karaoke word spans
   setSubtitleText(narration);
 
-  // Audio speech with soak pause
-  window.AudioEngine.speak(narration, PlayerState.language, () => {
-    if (!PlayerState.isPlaying) return;
+  // Reset all staged elements to hidden state (blackboard begins completely empty)
+  document.querySelectorAll('.staged-element, .staged-from-left, .staged-from-right, .staged-pop')
+    .forEach(el => el.classList.remove('revealed'));
+  clearLaserBeams();
 
-    if (PlayerState.stepByStepMode) {
-      // Step-by-Step Mode: Auto-pause gracefully
-      pausePlayback();
-      setSubtitleText(`✨ Step ${stepData.step} Complete • Press [→] or Space for Next Step ▶`);
-      return;
-    }
-
-    // Continuous Mode: Grant 5 seconds of calm absorption soak pause
-    const soakTime = 5000 / PlayerState.playbackSpeed;
-    PlayerState.stepTimer = setTimeout(() => {
-      if (PlayerState.isPlaying) {
-        if (PlayerState.currentStepIndex < PlayerState.totalSteps) {
-          loadAndRenderStep(PlayerState.currentStepIndex + 1);
-        } else {
-          pausePlayback();
-          setSubtitleText("JAVA MEMORY MASTERCLASS COMPLETE // CONGRATULATIONS!");
-        }
+  // CHOREOGRAPHED TIMELINE REVEALS
+  if (stepData.step === 1) {
+    // Cue 1: Room 1 (The Quick Desk) swoops in from left (at ~3.5s)
+    const t1 = setTimeout(() => {
+      const el = document.getElementById('card-desk');
+      if (el) {
+        el.classList.add('revealed');
+        window.AudioEngine.playWhoosh();
       }
-    }, soakTime);
+    }, Math.round(3500 / speed));
+    PlayerState.activeTimelineTimers.push(t1);
+
+    // Cue 2: Room 2 (The Big Warehouse) swoops in from right (at ~8.5s)
+    const t2 = setTimeout(() => {
+      const el = document.getElementById('card-warehouse');
+      if (el) {
+        el.classList.add('revealed');
+        window.AudioEngine.playWhoosh();
+      }
+    }, Math.round(8500 / speed));
+    PlayerState.activeTimelineTimers.push(t2);
+
+    // Cue 3: 30-Sec Puzzle pops in with spring curve (at ~14.5s)
+    const t3 = setTimeout(() => {
+      const el = document.getElementById('card-puzzle');
+      if (el) {
+        el.classList.add('revealed');
+        window.AudioEngine.playBeep(620, 0.1);
+      }
+    }, Math.round(14500 / speed));
+    PlayerState.activeTimelineTimers.push(t3);
+
+  } else if (stepData.step === 2) {
+    // Cue 1: Smart TV device swoops in on right (at ~2.2s)
+    const t1 = setTimeout(() => {
+      const tv = document.getElementById('smart-tv-box');
+      if (tv) {
+        tv.classList.add('revealed');
+        window.AudioEngine.playWhoosh();
+      }
+    }, Math.round(2200 / speed));
+    PlayerState.activeTimelineTimers.push(t1);
+
+    // Cue 2: Remote 1 swoops in on left + Laser beam connect (at ~5.8s)
+    const t2 = setTimeout(() => {
+      const rem1 = document.getElementById('remote-box-1');
+      if (rem1) {
+        rem1.classList.add('revealed');
+        window.AudioEngine.playBeep(520, 0.08);
+        setTimeout(drawRemoteLaserBeams, 200);
+      }
+    }, Math.round(5800 / speed));
+    PlayerState.activeTimelineTimers.push(t2);
+
+    // Cue 3: Remote 2 swoops in on left + Laser beam 2 (at ~9.5s)
+    const t3 = setTimeout(() => {
+      const rem2 = document.getElementById('remote-box-2');
+      if (rem2) {
+        rem2.classList.add('revealed');
+        window.AudioEngine.playBeep(580, 0.08);
+        setTimeout(drawRemoteLaserBeams, 200);
+      }
+    }, Math.round(9500 / speed));
+    PlayerState.activeTimelineTimers.push(t3);
+
+    // Cue 4: Golden Rule banner pops up (at ~14.5s)
+    const t4 = setTimeout(() => {
+      const gBox = document.getElementById('golden-rule-box');
+      if (gBox) {
+        gBox.classList.add('revealed');
+        window.AudioEngine.playBeep(640, 0.1);
+      }
+    }, Math.round(14500 / speed));
+    PlayerState.activeTimelineTimers.push(t4);
+
+  } else if (stepData.step === 3) {
+    // Reveal IDE & Memory panels (at ~0.6s)
+    const t0 = setTimeout(() => {
+      const ide = document.getElementById('step3-ide-panel');
+      const mem = document.getElementById('step3-mem-panel');
+      if (ide) ide.classList.add('revealed');
+      if (mem) mem.classList.add('revealed');
+      window.AudioEngine.playWhoosh();
+    }, Math.round(600 / speed));
+    PlayerState.activeTimelineTimers.push(t0);
+
+    // Step through the 7 execution sub-steps
+    const subTimings = [800, 3200, 6800, 10500, 14200, 18000, 21500];
+    subTimings.forEach((tMs, idx) => {
+      const timer = setTimeout(() => {
+        PlayerState.ideSubStep = idx;
+        renderIdeSubStep(idx);
+        window.AudioEngine.playBeep(480 + idx * 30, 0.05);
+      }, Math.round(tMs / speed));
+      PlayerState.activeTimelineTimers.push(timer);
+    });
+  }
+
+  // AUDIO SPEECH WITH REAL-TIME KARAOKE TRACKING
+  window.AudioEngine.speak(narration, {
+    language: PlayerState.language,
+    onWordBoundary: highlightCaptionWord,
+    onComplete: () => {
+      // Mark all words as completed
+      document.querySelectorAll('.caption-word').forEach(w => {
+        w.className = 'caption-word word-spoken';
+      });
+
+      if (!PlayerState.isPlaying) return;
+
+      if (PlayerState.stepByStepMode) {
+        pausePlayback();
+        setSubtitleText(`✨ Step ${stepData.step} Complete • Press [→] or Space for Next Step ▶`);
+        return;
+      }
+
+      // Continuous Mode: Grant 5 seconds of calm absorption soak pause
+      const soakTime = Math.round(5000 / speed);
+      PlayerState.stepTimer = setTimeout(() => {
+        if (PlayerState.isPlaying) {
+          if (PlayerState.currentStepIndex < PlayerState.totalSteps) {
+            loadAndRenderStep(PlayerState.currentStepIndex + 1, true);
+          } else {
+            pausePlayback();
+            setSubtitleText("🎓 JAVA MEMORY MASTERCLASS COMPLETE // CONGRATULATIONS!");
+          }
+        }
+      }, soakTime);
+    }
   });
 }
 
-// 4. INTERACTIVE STEP MANIPULATIVES
+// 4. REAL-TIME KARAOKE WORD TOKENIZER & HIGHLIGHTER
+let currentCaptionWords = [];
+
+function setSubtitleText(text) {
+  if (!DOM.subtitleText) return;
+  if (!text) {
+    DOM.subtitleText.innerHTML = '';
+    currentCaptionWords = [];
+    return;
+  }
+
+  currentCaptionWords = [];
+  const regex = /(\S+)/g;
+  let match;
+  let html = '';
+  let lastIndex = 0;
+  let wordIdx = 0;
+
+  while ((match = regex.exec(text)) !== null) {
+    const word = match[0];
+    const start = match.index;
+    const end = start + word.length;
+
+    if (start > lastIndex) {
+      html += escapeHtml(text.substring(lastIndex, start));
+    }
+
+    currentCaptionWords.push({
+      index: wordIdx,
+      word: word,
+      start: start,
+      end: end
+    });
+
+    html += `<span class="caption-word" id="cap-w-${wordIdx}" data-start="${start}" data-end="${end}">${escapeHtml(word)}</span>`;
+    lastIndex = end;
+    wordIdx++;
+  }
+
+  if (lastIndex < text.length) {
+    html += escapeHtml(text.substring(lastIndex));
+  }
+
+  DOM.subtitleText.innerHTML = html;
+}
+
+function highlightCaptionWord(charIndex) {
+  if (!currentCaptionWords || currentCaptionWords.length === 0) return;
+
+  let activeWord = null;
+  for (let i = 0; i < currentCaptionWords.length; i++) {
+    const w = currentCaptionWords[i];
+    if (charIndex >= w.start && charIndex <= w.end) {
+      activeWord = w;
+      break;
+    }
+  }
+
+  if (!activeWord) {
+    for (let i = 0; i < currentCaptionWords.length; i++) {
+      if (currentCaptionWords[i].start >= charIndex) {
+        activeWord = currentCaptionWords[i];
+        break;
+      }
+    }
+  }
+
+  if (activeWord) {
+    for (let i = 0; i < currentCaptionWords.length; i++) {
+      const el = document.getElementById(`cap-w-${i}`);
+      if (!el) continue;
+      if (i < activeWord.index) {
+        el.className = 'caption-word word-spoken';
+      } else if (i === activeWord.index) {
+        el.className = 'caption-word word-active';
+      } else {
+        el.className = 'caption-word';
+      }
+    }
+  }
+}
+
+// 5. INTERACTIVE STEP 2 MANIPULATIVES
 function userTuneTv(delta) {
   const ageEl = document.getElementById('tv-age-val');
   if (!ageEl) return;
@@ -397,7 +611,7 @@ function clearLaserBeams() {
   if (svg) svg.innerHTML = '';
 }
 
-// Render Step 3 Sub-steps
+// 6. RENDER STEP 3 SUB-STEPS
 function renderIdeSubStep(subStepIdx) {
   const stepData = PlayerState.cachedSteps[3];
   if (!stepData || !stepData.executionSteps) return;
@@ -405,7 +619,6 @@ function renderIdeSubStep(subStepIdx) {
   const sub = stepData.executionSteps[subStepIdx];
   if (!sub) return;
 
-  // Highlight active code row
   document.querySelectorAll('.code-line-row').forEach(r => r.classList.remove('line-active'));
   const lineEl = document.getElementById('line-' + sub.activeLine);
   if (lineEl) lineEl.classList.add('line-active');
@@ -417,7 +630,6 @@ function renderIdeSubStep(subStepIdx) {
   const isTelugish = PlayerState.language === 'telugish';
   if (explEl) explEl.textContent = isTelugish ? sub.explainer_telugish : sub.explainer_en;
 
-  // Render Stack Slot Items
   const stackBody = document.getElementById('stack-slot-body');
   if (stackBody) {
     stackBody.innerHTML = sub.stack.map(item => `
@@ -428,7 +640,6 @@ function renderIdeSubStep(subStepIdx) {
     `).join('');
   }
 
-  // Render Heap Slot Items
   const heapBody = document.getElementById('heap-slot-body');
   if (heapBody) {
     heapBody.innerHTML = sub.heap.map(obj => `
@@ -443,7 +654,7 @@ function renderIdeSubStep(subStepIdx) {
   }
 }
 
-// 5. PLAYER TRANSPORT CONTROLLERS
+// 7. PLAYER TRANSPORT CONTROLLERS
 function togglePlayPause() {
   if (PlayerState.isPlaying) {
     pausePlayback();
@@ -462,22 +673,19 @@ function resumePlayback() {
 function pausePlayback() {
   PlayerState.isPlaying = false;
   updatePlayPauseIconUI();
-  if (PlayerState.stepTimer) {
-    clearTimeout(PlayerState.stepTimer);
-    PlayerState.stepTimer = null;
-  }
-  window.AudioEngine.stopSpeech();
+  clearAllActiveTimers();
+  window.AudioEngine.stopSpeech(); // Strictly silences all audio
 }
 
 function stepForward() {
   if (PlayerState.currentStepIndex < PlayerState.totalSteps) {
-    loadAndRenderStep(PlayerState.currentStepIndex + 1);
+    loadAndRenderStep(PlayerState.currentStepIndex + 1, PlayerState.isPlaying);
   }
 }
 
 function stepBackward() {
   if (PlayerState.currentStepIndex > 1) {
-    loadAndRenderStep(PlayerState.currentStepIndex - 1);
+    loadAndRenderStep(PlayerState.currentStepIndex - 1, PlayerState.isPlaying);
   }
 }
 
@@ -517,12 +725,18 @@ function setLanguage(lang) {
   const curStep = PlayerState.cachedSteps[PlayerState.currentStepIndex];
   if (curStep) {
     renderStepView(curStep);
-    if (PlayerState.isPlaying) runStepPresentation(curStep);
+    if (PlayerState.isPlaying) {
+      runStepPresentation(curStep);
+    } else {
+      document.querySelectorAll('.staged-element, .staged-from-left, .staged-from-right, .staged-pop')
+        .forEach(el => el.classList.add('revealed'));
+      if (curStep.step === 2) setTimeout(drawRemoteLaserBeams, 60);
+    }
   }
   window.AudioEngine.playBeep(440, 0.05);
 }
 
-// 6. UI UPDATERS
+// 8. UI UPDATERS
 function updateStepPillsUI(activeStep) {
   document.querySelectorAll('.step-pill-btn').forEach(b => b.classList.remove('pill-active'));
   const pill = document.getElementById('step-pill-' + activeStep);
@@ -543,13 +757,7 @@ function updateScrubberUI() {
   if (DOM.timeCurrent) DOM.timeCurrent.textContent = `0${PlayerState.currentStepIndex}:00`;
 }
 
-function setSubtitleText(text) {
-  if (DOM.subtitleText) {
-    DOM.subtitleText.textContent = text;
-  }
-}
-
-// 7. DRAGGABLE SUBTITLES (YouTube PIP Style)
+// 9. DRAGGABLE SUBTITLES (YouTube PIP Style)
 let isDragging = false;
 let dragStartX = 0;
 let dragStartY = 0;
@@ -627,10 +835,10 @@ function toggleSubtitleSize() {
   }
 }
 
-// 8. KEYBOARD SHORTCUTS
+// 10. KEYBOARD SHORTCUTS
 function initKeyboardShortcuts() {
   window.addEventListener('keydown', (e) => {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
 
     if (e.code === 'Space') {
       e.preventDefault();
@@ -642,11 +850,11 @@ function initKeyboardShortcuts() {
       e.preventDefault();
       stepBackward();
     } else if (e.key === '1') {
-      loadAndRenderStep(1);
+      loadAndRenderStep(1, true);
     } else if (e.key === '2') {
-      loadAndRenderStep(2);
+      loadAndRenderStep(2, true);
     } else if (e.key === '3') {
-      loadAndRenderStep(3);
+      loadAndRenderStep(3, true);
     } else if (e.key.toLowerCase() === 'm') {
       toggleStepMode();
     } else if (e.key.toLowerCase() === 'c') {
@@ -656,9 +864,9 @@ function initKeyboardShortcuts() {
 }
 
 function escapeHtml(str) {
+  if (typeof str !== 'string') return '';
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 // Auto-boot on DOM ready
 document.addEventListener('DOMContentLoaded', bootPlayerApp);
-
