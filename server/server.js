@@ -5,7 +5,7 @@ const path = require('path');
 const url = require('url');
 
 const { lessonManifest, preloadedSteps } = require('./lessonData');
-const { generateDynamicStep } = require('./stepGenerator');
+const { generateDynamicStep, getResearchedDomains, generateDomainExample } = require('./stepGenerator');
 
 const PORT = process.env.PORT || 5000;
 const CLIENT_DIR = path.resolve(__dirname, '..', 'client');
@@ -160,16 +160,47 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  // 4. GET /api/lesson/domains (Researched Domain Models)
+  if (method === 'GET' && pathname === '/api/lesson/domains') {
+    console.log(`[API] GET /api/lesson/domains`);
+    return sendJson(res, 200, {
+      success: true,
+      data: getResearchedDomains()
+    });
+  }
+
+  // 5. POST /api/lesson/generate-example (Dynamic Alternate Domain Example)
+  if (method === 'POST' && pathname === '/api/lesson/generate-example') {
+    try {
+      const body = await parseJsonBody(req);
+      const domainId = body.domain || 'banking';
+      console.log(`[API] POST /api/lesson/generate-example -> Synthesizing domain '${domainId}'...`);
+
+      const example = generateDomainExample(domainId);
+      return sendJson(res, 200, {
+        success: true,
+        data: example
+      });
+    } catch (err) {
+      console.error(`[API Error]`, err);
+      return sendJson(res, 500, {
+        success: false,
+        error: 'Failed to generate domain example'
+      });
+    }
+  }
+
   // --- STATIC ASSETS ---
   serveStaticFile(req, res, pathname);
 });
 
 server.listen(PORT, () => {
   console.log(`\n======================================================`);
-  console.log(`🚀 Visual Lesson Engine Server running at:`);
-  console.log(`   Local URL: http://localhost:${PORT}`);
-  console.log(`   API Endpoint: http://localhost:${PORT}/api/lesson/manifest`);
-  console.log(`   Client UI: http://localhost:${PORT}/index.html`);
+  console.log(`🌌 VoidRD // Spatial Systems Cinema Server running at:`);
+  console.log(`   Local URL:    http://localhost:${PORT}`);
+  console.log(`   API Manifest: http://localhost:${PORT}/api/lesson/manifest`);
+  console.log(`   API Domains:  http://localhost:${PORT}/api/lesson/domains`);
+  console.log(`   Client UI:    http://localhost:${PORT}/index.html`);
   console.log(`======================================================\n`);
 });
 

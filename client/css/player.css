@@ -374,7 +374,7 @@ html, body {
   background: #09090b;
 }
 
-/* Step 2 Visual Layout: TV Remote & TV Screen */
+/* Step 2 Visual Layout: Tactical Debit Cards & Central Bank Vault */
 .step2-sandbox {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1441,3 +1441,608 @@ html, body {
     width: 95%;
   }
 }
+
+/* ==========================================================================
+   20+ YEAR MASTER TEACHER: 3 JVM WORLDS TRIAD (BankAccount vs. account vs. new BankAccount)
+   ========================================================================== */
+.three-worlds-triad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.world-card {
+  background: #111116;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+
+.world-card:hover {
+  transform: translateY(-2px);
+}
+
+.world-card.card-metaspace {
+  border-top: 3px solid var(--accent-blue);
+}
+
+.world-card.card-stack {
+  border-top: 3px solid #818cf8;
+}
+
+.world-card.card-heap {
+  border-top: 3px solid var(--accent-emerald);
+}
+
+.world-realm-badge {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 6px;
+}
+
+.world-token-title {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.world-analogy-text {
+  font-size: 11px;
+  color: #a1a1aa;
+  line-height: 1.45;
+  margin-bottom: 8px;
+}
+
+.world-hardware-footer {
+  background: #09090b;
+  border: 1px solid #27272a;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #71717a;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Motion Graphics Animated Photon Stream & Traveling Laser Pulse */
+.laser-pulse-line {
+  stroke-dasharray: 8, 8;
+  animation: laserStreamDash 1.2s linear infinite;
+}
+
+@keyframes laserStreamDash {
+  from {
+    stroke-dashoffset: 32;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.laser-photon-dot {
+  fill: var(--accent-emerald);
+  filter: none;
+}
+
+/* Floating Data Bus Packet */
+.floating-data-packet {
+  position: absolute;
+  z-index: 999;
+  pointer-events: none;
+  background: #181824;
+  border: 1px solid var(--accent-blue);
+  color: #38bdf8;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 4px;
+  will-change: transform, opacity;
+}
+
+/* ==========================================================================
+   YOUTUBE-GRADE MOTION GRAPHICS HARDWARE VISUALIZERS (Manim / Fireship style)
+   ========================================================================== */
+
+/* 1. Tactical Reference Variable Device */
+.handheld-remote-chassis {
+  background: linear-gradient(180deg, #18181f 0%, #101014 100%);
+  border: 1px solid #2e2e38;
+  border-radius: 14px;
+  padding: 12px 14px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 260px;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
+}
+
+.handheld-remote-chassis:hover {
+  border-color: var(--accent-blue);
+  transform: translateY(-2px);
+}
+
+.remote-ir-transmitter {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 6px;
+  background: #27272a;
+  border-radius: 4px 4px 0 0;
+  border: 1px solid #3f3f46;
+  border-bottom: none;
+}
+
+.ir-led-bulb {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+  margin: 0 auto;
+  transition: background 0.15s ease;
+}
+
+.ir-led-bulb.emitting {
+  background: #38bdf8;
+}
+
+.remote-lcd-screen {
+  background: #09090c;
+  border: 1px solid #27272a;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.remote-keypad-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.tactile-remote-btn {
+  background: #22222a;
+  border: 1px solid #32323d;
+  color: #fafafa;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.tactile-remote-btn:hover {
+  background: #2a2a36;
+  border-color: var(--accent-blue);
+}
+
+.tactile-remote-btn:active {
+  transform: scale(0.96);
+  background: var(--accent-blue);
+  color: #09090b;
+}
+
+/* 2. Modern Tactical Debit Card Chassis (The Variable on the Stack) */
+.debit-card-chassis {
+  background: linear-gradient(135deg, #1e1e26 0%, #13131a 60%, #0d0d12 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 270px;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
+  overflow: hidden;
+}
+
+.debit-card-chassis::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+  transform: skewX(-25deg);
+  transition: 0.75s;
+  pointer-events: none;
+}
+
+.debit-card-chassis:hover::before {
+  left: 200%;
+}
+
+.debit-card-chassis:hover {
+  border-color: var(--accent-blue);
+  transform: translateY(-2px);
+}
+
+.debit-card-chassis.card-nullified {
+  opacity: 0.35 !important;
+  border-color: #ef4444 !important;
+  filter: grayscale(0.8);
+}
+
+.debit-card-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.debit-chip {
+  width: 32px;
+  height: 22px;
+  background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
+  border-radius: 4px;
+  border: 1px solid #78350f;
+  position: relative;
+  box-shadow: inset 0 1px 2px rgba(255,255,255,0.3);
+}
+
+.debit-chip::after {
+  content: '';
+  position: absolute;
+  top: 4px; left: 4px; right: 4px; bottom: 4px;
+  border: 1px solid rgba(0,0,0,0.25);
+  border-radius: 2px;
+}
+
+.contactless-icon {
+  font-size: 14px;
+  color: #94a3b8;
+  opacity: 0.8;
+}
+
+.card-emboss-addr {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #f8fafc;
+  margin: 2px 0;
+}
+
+.card-holder-label {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+/* 3. Central Bank Vault Cabinet (The Physical Object on the Heap) */
+.bank-vault-cabinet {
+  background: radial-gradient(circle at 50% 30%, #1c1c24 0%, #0d0d12 100%);
+  border: 2px solid #2e2e3a;
+  border-radius: 12px;
+  padding: 12px 14px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7);
+  width: 100%;
+}
+
+.vault-bezel-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #22222a;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.vault-stage-body {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.vault-door-wheel-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #2e2e3a 0%, #141418 100%);
+  border: 3px solid #3f3f4e;
+  box-shadow: inset 0 3px 6px rgba(0,0,0,0.8), 0 4px 12px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.vault-lock-dial {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px dashed #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #cbd5e1;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.vault-balance-display {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--accent-emerald);
+  letter-spacing: 0.5px;
+}
+
+.vault-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9.5px;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* 4. Three.js Ambient 3D Canvas Background */
+.three-ambient-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.45;
+}
+
+/* 3. Hardware LIFO Stack Rack Visualizer */
+.stack-rack-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.stack-slot-cell {
+  background: #09090c;
+  border: 1px solid #27272a;
+  border-left: 3px solid var(--accent-indigo);
+  border-radius: 4px;
+  padding: 6px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  transition: all 0.2s ease;
+}
+
+.stack-slot-cell:hover {
+  border-color: var(--accent-indigo);
+  background: #101016;
+}
+
+/* 4. Spatial Heap Memory Grid */
+.heap-grid-visualizer {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.heap-shelf-block {
+  background: #09090c;
+  border: 1px solid #27272a;
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  transition: all 0.2s ease;
+}
+
+.heap-shelf-block.shelf-active {
+  border-color: var(--accent-emerald);
+  background: rgba(52, 211, 153, 0.05);
+}
+
+.hotspot-byte-slice {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 10px;
+}
+
+/* ==========================================================================
+   VOIDRD BRANDING IDENTITY & DYNAMIC DOMAIN PICKER
+   ========================================================================== */
+.voidrd-logo-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: #111116;
+  border: 1px solid #27272a;
+  padding: 4px 10px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+.voidrd-origin-mark {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 12px;
+  color: var(--accent-blue);
+  letter-spacing: -0.5px;
+}
+
+.voidrd-brand-name {
+  font-weight: 800;
+  font-size: 12.5px;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.voidrd-tag {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  color: #71717a;
+  border-left: 1px solid #27272a;
+  padding-left: 6px;
+  letter-spacing: 0.5px;
+}
+
+/* Dynamic Domain Switcher Dropdown */
+.domain-picker-wrap {
+  position: relative;
+}
+
+.btn-domain-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #18181b;
+  border: 1px solid #27272a;
+  color: #e4e4e7;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-domain-toggle:hover {
+  border-color: var(--accent-blue);
+  background: #202025;
+}
+
+.domain-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 290px;
+  background: #101014;
+  border: 1px solid #2e2e38;
+  border-radius: 8px;
+  padding: 8px;
+  z-index: 150;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.85);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.domain-dropdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: #71717a;
+  padding: 4px 6px;
+  border-bottom: 1px solid #1f1f26;
+  margin-bottom: 2px;
+}
+
+.domain-option-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  background: #141419;
+  border: 1px solid #22222a;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.domain-option-item:hover {
+  background: #1c1c24;
+  border-color: var(--accent-blue);
+}
+
+.domain-option-item.active-domain {
+  border-color: var(--accent-emerald);
+  background: rgba(52, 211, 153, 0.08);
+}
+
+.domain-option-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.domain-option-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.domain-option-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.domain-option-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.domain-option-badge {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(56, 189, 248, 0.12);
+  color: var(--accent-blue);
+}
+
+.domain-option-tagline {
+  font-size: 9.5px;
+  color: #94a3b8;
+  line-height: 1.3;
+}
+
+
+

@@ -1,19 +1,21 @@
 {
-  "name": "pace-visual-lesson-engine",
+  "name": "voidrd-engine",
   "version": "2.0.0",
-  "description": "Interactive Visual Lesson Player & Dynamic Generation Engine",
+  "description": "VoidRD // Spatial Systems Cinema & Interactive Engineering Lab",
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js",
     "test": "node test/verify_app.js"
   },
   "keywords": [
-    "education",
-    "visual-lesson",
+    "voidrd",
+    "engineering-cinema",
+    "spatial-learning",
+    "3d-webgl",
     "java-memory",
     "interactive-player"
   ],
-  "author": "Pace Engineering",
+  "author": "VoidRD Systems",
   "license": "MIT"
 }
 

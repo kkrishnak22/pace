@@ -67,6 +67,8 @@ async function bootPlayerApp() {
   initDraggableSubtitles();
   initKeyboardShortcuts();
   initHudMouseListeners();
+  initThreeAmbientScene();
+  initDomainPicker();
 
   console.log('[PlayerApp] Booting visual lesson player engine...');
 
@@ -212,13 +214,13 @@ const fetchDynamicStep3 = () => fetchDynamicStep(3);
 function formatScreenTextWithTerms(text) {
   if (!text) return '';
   const termPatterns = [
-    { pattern: /\b(int age = 21|int age = 3|localAge|age)\b/gi, key: 'variable-primitive', cls: 'term-var' },
-    { pattern: /\b(Dog dog|Dog d2|Dog d|Dog instance|Dog|dog|d2|d)\b/gi, key: 'object-reference', cls: 'term-obj' },
-    { pattern: /\b(new Dog|new)\b/gi, key: 'new-keyword', cls: 'term-keyword' },
+    { pattern: /\b(int deposit = 500|int deposit|localDeposit|deposit|int balance|balance)\b/gi, key: 'variable-primitive', cls: 'term-var' },
+    { pattern: /\b(BankAccount account|BankAccount jointCard|BankAccount b|BankAccount|account|jointCard|b)\b/gi, key: 'bankaccount-vs-account', cls: 'term-obj' },
+    { pattern: /\b(new BankAccount|new)\b/gi, key: 'new-keyword', cls: 'term-keyword' },
     { pattern: /\b(Stack Memory|Stack Desk|Stack trays|Call Stack|Stack)\b/gi, key: 'stack-memory', cls: 'term-mem' },
-    { pattern: /\b(Heap Memory|Heap Warehouse|Heap Pool|Heap shelves|Heap)\b/gi, key: 'heap-memory', cls: 'term-mem' },
+    { pattern: /\b(Heap Memory|Heap Warehouse|Central Vault|Bank Vault|Vault|Heap)\b/gi, key: 'heap-memory', cls: 'term-mem' },
     { pattern: /\b(0x4A2F|0x7B9C|0x1000)\b/gi, key: 'memory-address', cls: 'term-mem' },
-    { pattern: /\b(Aliasing|remote control|duplicate remote|TV remote)\b/gi, key: 'aliasing', cls: 'term-obj' },
+    { pattern: /\b(Aliasing|Debit Card 1|Debit Card 2|debit card|joint card|duplicate card)\b/gi, key: 'aliasing', cls: 'term-obj' },
     { pattern: /\b(Pass-by-Value|pass-by-value)\b/gi, key: 'pass-by-value', cls: 'term-var' },
     { pattern: /\b(Garbage Collector|GC)\b/gi, key: 'garbage-collector', cls: 'term-mem' },
     { pattern: /\b(StackOverflowError)\b/gi, key: 'stackoverflow-error', cls: 'term-error' },
@@ -240,6 +242,142 @@ function formatScreenTextWithTerms(text) {
   }).join('');
 }
 
+// ==========================================================================
+// MOTION GRAPHICS ENGINE (Anime.js v3 Integration for 60fps Butter-Smooth UI)
+// ==========================================================================
+let lastFocusedContainerId = null;
+let currentSyncPhase = 0;
+
+const MotionFX = {
+  springIn(targets, fromX = 0, fromY = 20, delay = 0) {
+    if (window.anime && targets) {
+      window.anime({
+        targets: targets,
+        translateX: [fromX, 0],
+        translateY: [fromY, 0],
+        scale: [0.96, 1],
+        opacity: [0, 1],
+        delay: delay,
+        easing: 'spring(1, 80, 12, 0)',
+        duration: 750
+      });
+    }
+  },
+
+  pulseElement(el) {
+    if (!el || !window.anime) return;
+    window.anime({
+      targets: el,
+      scale: [1, 1.06, 1],
+      duration: 280,
+      easing: 'cubicBezier(0.16, 1, 0.3, 1)'
+    });
+  },
+
+  drawCurvedLaser(svg, fromEl, toEl, options = {}) {
+    if (!svg || !fromEl || !toEl) return null;
+    const pRect = svg.getBoundingClientRect();
+    const fRect = fromEl.getBoundingClientRect();
+    const tRect = toEl.getBoundingClientRect();
+
+    const x1 = fRect.right - pRect.left;
+    const y1 = fRect.top + fRect.height / 2 - pRect.top;
+    const x2 = tRect.left - pRect.left;
+    const y2 = tRect.top + tRect.height / 2 - pRect.top;
+
+    const dx = x2 - x1;
+    const cp1x = x1 + dx * 0.45;
+    const cp1y = y1;
+    const cp2x = x1 + dx * 0.55;
+    const cp2y = y2;
+    const d = `M ${x1} ${y1} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x2} ${y2}`;
+
+    // Background guide
+    const glowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    glowPath.setAttribute('d', d);
+    glowPath.setAttribute('stroke', options.glowColor || 'rgba(56, 189, 248, 0.2)');
+    glowPath.setAttribute('stroke-width', '4');
+    glowPath.setAttribute('fill', 'none');
+    svg.appendChild(glowPath);
+
+    // Living flowing laser core
+    const mainPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    mainPath.setAttribute('d', d);
+    mainPath.setAttribute('stroke', options.color || '#38bdf8');
+    mainPath.setAttribute('stroke-width', '2');
+    mainPath.setAttribute('fill', 'none');
+    mainPath.classList.add('laser-pulse-line');
+    svg.appendChild(mainPath);
+
+    // Traveling Photon Particle Dot
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('r', '3.5');
+    circle.setAttribute('fill', options.color || '#38bdf8');
+    svg.appendChild(circle);
+
+    if (window.anime) {
+      const pathEl = window.anime.path(mainPath);
+      window.anime({
+        targets: circle,
+        translateX: pathEl('x'),
+        translateY: pathEl('y'),
+        easing: 'linear',
+        duration: 1600,
+        loop: true
+      });
+    }
+
+    return { glowPath, mainPath, circle };
+  },
+
+  shootDataPacket(fromRect, toRect, label = '0x4A2F', color = '#38bdf8') {
+    const stage = document.getElementById('stage-body-mount');
+    if (!stage) return;
+    const pRect = stage.getBoundingClientRect();
+    const packet = document.createElement('div');
+    packet.className = 'floating-data-packet';
+    packet.textContent = label;
+    packet.style.borderColor = color;
+    packet.style.color = color;
+    packet.style.left = `${fromRect.right - pRect.left}px`;
+    packet.style.top = `${fromRect.top + fromRect.height / 2 - pRect.top - 12}px`;
+    stage.appendChild(packet);
+
+    if (window.anime) {
+      window.anime({
+        targets: packet,
+        left: [fromRect.right - pRect.left, toRect.left - pRect.left],
+        top: [fromRect.top + fromRect.height / 2 - pRect.top - 12, toRect.top + toRect.height / 2 - pRect.top - 12],
+        scale: [0.8, 1.1, 1],
+        opacity: [0, 1, 1, 0],
+        easing: 'cubicBezier(0.16, 1, 0.3, 1)',
+        duration: 850,
+        complete: () => packet.remove()
+      });
+    } else {
+      setTimeout(() => packet.remove(), 850);
+    }
+  },
+
+  revealTriad(containerId) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    const cards = el.querySelectorAll('.world-card');
+    if (window.anime && cards.length > 0) {
+      window.anime({
+        targets: cards,
+        translateY: [24, 0],
+        scale: [0.94, 1],
+        opacity: [0, 1],
+        delay: window.anime.stagger(100),
+        easing: 'spring(1, 80, 12, 0)',
+        duration: 700
+      });
+    }
+  }
+};
+window.MotionFX = MotionFX;
+
 function highlightScreenWords(wordStr) {
   if (!wordStr) return;
   const clean = wordStr.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -248,18 +386,39 @@ function highlightScreenWords(wordStr) {
   const stage = document.getElementById('stage-body-mount');
   if (!stage) return;
 
+  // Clear previous word-active classes across the board
   stage.querySelectorAll('.screen-word.word-active').forEach(el => {
     el.classList.remove('word-active');
-    el.classList.add('word-spoken');
   });
 
-  const matches = stage.querySelectorAll(`.screen-word[data-clean="${clean}"]`);
-  matches.forEach(el => {
-    const parentCard = el.closest('.revealed, .ide-editor-panel, .smart-tv-device');
-    if (parentCard) {
-      el.classList.add('word-active');
+  // STRICT CONTAINER SCOPING:
+  // If no container is actively focused (e.g. general introduction),
+  // NEVER randomly light up words inside cards that have not been reached!
+  if (!lastFocusedContainerId) return;
+
+  const targetContainer = document.getElementById(lastFocusedContainerId);
+  if (!targetContainer) return;
+
+  // Query ONLY within the actively focused container
+  const scopedWords = targetContainer.querySelectorAll(`.screen-word[data-clean="${clean}"]`);
+  let matchedElement = null;
+
+  for (const el of scopedWords) {
+    if (!el.classList.contains('word-spoken')) {
+      matchedElement = el;
+      break;
     }
-  });
+  }
+
+  // If all matching words in this card were already marked spoken, reuse the first occurrence
+  if (!matchedElement && scopedWords.length > 0) {
+    matchedElement = scopedWords[0];
+  }
+
+  if (matchedElement) {
+    matchedElement.classList.add('word-active');
+    MotionFX.pulseElement(matchedElement);
+  }
 }
 
 // Render HTML layout for each step inside fixed blackboard
@@ -280,163 +439,191 @@ function renderStepView(stepData) {
     const c2 = stepData.cards[1];
     const pz = stepData.puzzle;
 
-    if (isRamView) {
-      // Physical RAM View (Real Computer Memory Reality)
-      DOM.bodyMount.innerHTML = `
-        <div class="step1-grid">
-          <div class="room-card room-desk staged-from-left revealed" id="card-desk">
-            <div>
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div class="room-badge" style="color:var(--accent-indigo);">PHYSICAL RAM // CALL STACK FRAME</div>
-                <button class="info-bubble-btn" data-hud-topic="stack-memory" onclick="toggleHudTooltip(event, 'stack-memory')" title="Click for Stack Explainer">i</button>
+    DOM.bodyMount.innerHTML = `
+      <div class="step1-grid">
+        <!-- Room 1: The Stack (Hardware LIFO Machine & Quick Study Desk) -->
+        <div class="room-card room-desk staged-from-left revealed" id="card-desk">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div class="room-badge" style="color:var(--accent-indigo);">ROOM 1 // THE STACK (JVMS §2.6 LIFO)</div>
+              <button class="info-bubble-btn" data-hud-topic="stack-memory" onclick="toggleHudTooltip(event, 'stack-memory')" title="Click for Stack Explainer">i</button>
+            </div>
+            <div class="room-title">${formatScreenTextWithTerms(isTelugish ? c1.title_telugish : c1.title_en)}</div>
+            <div class="room-desc" id="c1-desc">${formatScreenTextWithTerms(isTelugish ? c1.desc_telugish : c1.desc_en)}</div>
+
+            <!-- Living Stack Frame Slots Rack -->
+            <div class="stack-rack-container" id="live-stack-rack">
+              <div style="display:flex; justify-content:space-between; font-size:10px; color:#94a3b8; font-family:var(--font-mono); margin-bottom:2px;">
+                <span>CPU RSP &bull; main() Stack Frame</span>
+                <span id="rsp-pointer-badge" style="color:var(--accent-indigo); font-weight:800;">RSP &rarr; Top of Stack</span>
               </div>
-              <div class="room-title">CPU Stack Memory (RSP Pointer)</div>
-              <div style="font-family:var(--font-mono); font-size:11px; background:#09090b; border:1px solid #27272a; border-radius:6px; padding:8px 10px; margin:8px 0;">
-                <div style="color:#71717a; margin-bottom:4px;">Thread 1 &bull; main() Stack Frame (LIFO):</div>
-                <div style="display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid #18181b;">
-                  <span style="color:#ffffff;">Slot 0: int age</span>
-                  <span style="color:var(--accent-blue);">${formatScreenTextWithTerms("21 (Direct 32-bit Value)")}</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; padding:3px 0;">
-                  <span style="color:#ffffff;">Slot 1: Dog dog</span>
-                  <span style="color:var(--accent-emerald);">${formatScreenTextWithTerms("0x4A2F (64-bit Heap Pointer)")}</span>
-                </div>
+              <div class="stack-slot-cell" id="stack-slot-deposit">
+                <span>Slot 1: <strong style="color:#ffffff;">int deposit</strong></span>
+                <span style="color:var(--accent-blue); font-weight:800;">500 (Direct 32-bit Bits)</span>
+              </div>
+              <div class="stack-slot-cell" id="stack-slot-account">
+                <span>Slot 2: <strong style="color:#ffffff;">BankAccount account</strong></span>
+                <span style="color:var(--accent-emerald); font-weight:800;">0x4A2F (Debit Card Pointer)</span>
               </div>
             </div>
-            <div id="c1-stats-pill" style="font-size:11px; color:#818cf8; font-family:var(--font-mono); margin-top:8px; padding:4px 8px; border-radius:4px; background:rgba(129,140,248,0.08); border:1px solid rgba(129,140,248,0.2);">
-              Speed: 0.001ms (CPU Hardware RSP Register) &bull; If Full: StackOverflowError
+
+            <!-- Interactive Hardware Stack Stepper Buttons -->
+            <div style="display:flex; gap:6px; margin-top:8px;">
+              <button class="tactile-remote-btn" onclick="simulatePushFrame()" title="Simulate calling a helper method">+ Push Frame</button>
+              <button class="tactile-remote-btn" onclick="simulatePopFrame()" title="Simulate method return">- Pop Frame</button>
             </div>
           </div>
+          <div id="c1-stats-pill" style="font-size:10.5px; color:#818cf8; font-family:var(--font-mono); margin-top:8px; padding:4px 8px; border-radius:4px; background:rgba(129,140,248,0.08); border:1px solid rgba(129,140,248,0.2);">
+            ⚡ 0.001ms Speed (Hardware RSP Register) &bull; If Full: StackOverflowError
+          </div>
+        </div>
 
-          <div class="room-card room-warehouse staged-from-right revealed" id="card-warehouse">
-            <div>
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div class="room-badge" style="color:var(--accent-emerald);">PHYSICAL RAM // HEAP STORAGE POOL</div>
-                <button class="info-bubble-btn" data-hud-topic="heap-memory" onclick="toggleHudTooltip(event, 'heap-memory')" title="Click for Heap Explainer">i</button>
-              </div>
-              <div class="room-title">Heap Memory Object Pool (RAM Shelf)</div>
-              <div style="font-family:var(--font-mono); font-size:11px; background:#09090b; border:1px solid #27272a; border-radius:6px; padding:8px 10px; margin:8px 0;">
-                <div style="display:flex; justify-content:space-between; color:var(--accent-emerald); font-weight:800; margin-bottom:4px;">
-                  <span>Shelf Address: 0x4A2F</span>
-                  <span>24 Bytes Allocated</span>
+        <!-- Room 2: The Heap (Central Bank Vault on the Heap) -->
+        <div class="room-card room-warehouse staged-from-right revealed" id="card-warehouse">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div class="room-badge" style="color:var(--accent-emerald);">ROOM 2 // THE HEAP (JVMS §2.5.3 OBJECTS)</div>
+              <button class="info-bubble-btn" data-hud-topic="heap-memory" onclick="toggleHudTooltip(event, 'heap-memory')" title="Click for Heap Explainer">i</button>
+            </div>
+            <div class="room-title">${formatScreenTextWithTerms(isTelugish ? c2.title_telugish : c2.title_en)}</div>
+            <div class="room-desc" id="c2-desc">${formatScreenTextWithTerms(isTelugish ? c2.desc_telugish : c2.desc_en)}</div>
+
+            <!-- Spatial Memory Grid & HotSpot 16B Anatomy -->
+            <div class="heap-grid-visualizer">
+              <div class="heap-shelf-block shelf-active" id="heap-shelf-4a2f">
+                <div style="display:flex; justify-content:space-between; color:var(--accent-emerald); font-weight:800;">
+                  <span>Vault 0x4A2F</span>
+                  <span>16 Bytes RAM</span>
                 </div>
-                <div style="padding:2px 0; color:#94a3b8;">[64-bit Mark Word: HashCode &bull; GC Age 1]</div>
-                <div style="padding:2px 0; color:#94a3b8;">[64-bit Klass Word: Pointer to Dog.class]</div>
-                <div style="padding:4px 0; color:#ffffff; border-top:1px solid #18181b; margin-top:2px;">
-                  Field 'name' &rarr; <span style="color:var(--accent-blue);">"Bruno"</span> &bull; Field 'age' &rarr; <span style="color:var(--accent-amber);">3</span>
+                <div class="hotspot-byte-slice" style="background:#13131a; color:#a1a1aa;">
+                  <span>Mark Word (8B):</span>
+                  <span>HashCode &bull; GC Age 0</span>
+                </div>
+                <div class="hotspot-byte-slice" style="background:#0f172a; color:#38bdf8;">
+                  <span>Klass Word (4B):</span>
+                  <span>&rarr; BankAccount.class</span>
+                </div>
+                <div class="hotspot-byte-slice" style="background:#1c1917; color:#fbbf24;">
+                  <span>Field 'balance' (4B):</span>
+                  <span id="shelf-vault-bal">$500</span>
+                </div>
+              </div>
+
+              <!-- Interactive Vault Manipulative Mini-Stage -->
+              <div class="heap-shelf-block" style="justify-content:center; align-items:center; text-align:center;">
+                <div class="vault-door-wheel-wrap" style="width:56px; height:56px;">
+                  <div class="vault-lock-dial" id="step1-vault-dial" style="width:34px; height:34px; font-size:13px;">🔒</div>
+                </div>
+                <div id="heap-vault-balance-display" style="font-size:16px; color:var(--accent-emerald); font-weight:800; font-family:var(--font-mono); margin-top:4px;">$500</div>
+                <div style="font-size:10px; color:#94a3b8; font-family:var(--font-mono);">Owner: Alice</div>
+                <div style="display:flex; gap:4px; margin-top:4px;">
+                  <button class="tactile-remote-btn" onclick="userDeposit(100, 1)" style="padding:3px 6px; font-size:9.5px;">+ $100</button>
+                  <button class="tactile-remote-btn" onclick="userWithdraw(50, 1)" style="padding:3px 6px; font-size:9.5px;">- $50</button>
+                  <button class="tactile-remote-btn" onclick="userAuditGc()" style="padding:3px 6px; font-size:9.5px;">🧹 GC</button>
                 </div>
               </div>
             </div>
-            <div class="puzzle-box staged-pop revealed" id="card-puzzle">
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="color:var(--accent-amber); font-weight:800; font-family:var(--font-mono); font-size:10px;">JVMS MEMORY MAPPING</span>
-                <button class="info-bubble-btn" data-hud-topic="mystery-puzzle" onclick="toggleHudTooltip(event, 'mystery-puzzle')">i</button>
-              </div>
-              <div style="font-size:11.5px; color:#fafafa; margin-top:4px; line-height:1.4;">
-                ${formatScreenTextWithTerms("Stack slot holds 0x4A2F (bits). Heap shelf holds instance payload. Java always copies the bits in the stack slot!")}
-              </div>
+          </div>
+          
+          <!-- 30-Second Interview Mystery & Master Teacher Triad -->
+          <div class="puzzle-box staged-pop revealed" id="card-puzzle" style="margin-top:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <div style="font-size:10.5px; font-weight:800; color:var(--accent-amber); font-family:var(--font-mono);">${pz.badge}</div>
+              <button class="info-bubble-btn" data-hud-topic="bankaccount-vs-account" onclick="toggleHudTooltip(event, 'bankaccount-vs-account')" title="Reveal 3 Worlds Breakdown">i</button>
+            </div>
+            <pre class="code-snippet" id="puzzle-code-line" style="margin:4px 0; padding:6px; border-radius:4px;">${formatScreenTextWithTerms(pz.code)}</pre>
+            <div id="puzzle-question-text" style="font-size:11.5px; color:#fafafa; margin-top:4px; line-height:1.4;">${formatScreenTextWithTerms(isTelugish ? pz.question_telugish : pz.question_en)}</div>
+            <div style="margin-top:6px; display:flex; gap:8px;">
+              <button onclick="revealPuzzleAnswer()" style="background:rgba(251,191,36,0.15); border:1px solid var(--accent-amber); color:var(--accent-amber); padding:4px 10px; border-radius:4px; font-size:10.5px; font-weight:800; cursor:pointer;">💡 Reveal 3 Worlds Breakdown</button>
             </div>
           </div>
         </div>
-      `;
-    } else {
-      // Intuitive Metaphor View (Desk & Warehouse)
-      DOM.bodyMount.innerHTML = `
-        <div class="step1-grid">
-          <div class="room-card room-desk staged-from-left" id="card-desk">
-            <div>
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div class="room-badge">${c1.badge}</div>
-                <button class="info-bubble-btn" data-hud-topic="stack-memory" onclick="toggleHudTooltip(event, 'stack-memory')" title="Click for Simple English Explainer">i</button>
-              </div>
-              <div class="room-title">${formatScreenTextWithTerms(isTelugish ? c1.title_telugish : c1.title_en)}</div>
-              <div class="room-desc" id="c1-desc">${formatScreenTextWithTerms(isTelugish ? c1.desc_telugish : c1.desc_en)}</div>
-            </div>
-            <div id="c1-stats-pill" style="font-size:11px; color:#818cf8; font-family:var(--font-mono); margin-top:8px; padding:4px 8px; border-radius:4px; background:rgba(129,140,248,0.08); border:1px solid rgba(129,140,248,0.2);">
-              ${c1.stats}
-            </div>
-          </div>
-
-          <div class="room-card room-warehouse staged-from-right" id="card-warehouse">
-            <div>
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div class="room-badge">${c2.badge}</div>
-                <button class="info-bubble-btn" data-hud-topic="heap-memory" onclick="toggleHudTooltip(event, 'heap-memory')" title="Click for Simple English Explainer">i</button>
-              </div>
-              <div class="room-title">${formatScreenTextWithTerms(isTelugish ? c2.title_telugish : c2.title_en)}</div>
-              <div class="room-desc" id="c2-desc">${formatScreenTextWithTerms(isTelugish ? c2.desc_telugish : c2.desc_en)}</div>
-            </div>
-            
-            <div class="puzzle-box staged-pop" id="card-puzzle">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                <div style="font-size:10.5px; font-weight:800; color:var(--accent-amber); font-family:var(--font-mono);">${pz.badge}</div>
-                <button class="info-bubble-btn" data-hud-topic="mystery-puzzle" onclick="toggleHudTooltip(event, 'mystery-puzzle')" title="Reveal Secret Answer">i</button>
-              </div>
-              <pre class="code-snippet" id="puzzle-code-line" style="margin:4px 0; padding:6px; border-radius:4px;">${formatScreenTextWithTerms(pz.code)}</pre>
-              <div id="puzzle-question-text" style="font-size:11.5px; color:#fafafa; margin-top:6px; line-height:1.4;">${formatScreenTextWithTerms(isTelugish ? pz.question_telugish : pz.question_en)}</div>
-              <div style="margin-top:8px; display:flex; gap:8px;">
-                <button onclick="revealPuzzleAnswer()" style="background:rgba(251,191,36,0.15); border:1px solid var(--accent-amber); color:var(--accent-amber); padding:4px 10px; border-radius:4px; font-size:10.5px; font-weight:800; cursor:pointer;">💡 Reveal Secret Answer</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
+      </div>
+    `;
   } else if (stepData.step === 2) {
-    // Step 2: TV Remote & Smart TV
+    // Step 2: Tactical Debit Cards & Central Bank Vault
     DOM.bodyMount.innerHTML = `
       <div class="step2-sandbox" id="step2-sandbox">
         <svg id="laser-wire-svg"></svg>
+        
+        <!-- Left: Handheld Debit Cards (Stack References) -->
         <div class="remotes-column">
-          <div class="remote-box remote-active staged-from-left" id="remote-box-1">
-            <div class="remote-header">
-              <div style="display:flex; align-items:center; gap:6px;">
-                <span>${stepData.remote1.name}</span>
-                <button class="info-bubble-btn" data-hud-topic="tv-remote" onclick="toggleHudTooltip(event, 'tv-remote')" title="What is a TV Remote?">i</button>
-              </div>
-              <span class="freq-tag">${stepData.remote1.freq}</span>
+          
+          <!-- Debit Card 1 (account: 0x4A2F) -->
+          <div class="debit-card-chassis staged-from-left revealed" id="card-box-1">
+            <div class="debit-card-top-row">
+              <div class="debit-chip"></div>
+              <div class="contactless-icon">📡</div>
             </div>
-            <code class="code-snippet">${formatScreenTextWithTerms(stepData.remote1.decl)}</code>
-            <div class="remote-actions">
-              <button class="btn-remote-action" onclick="userTuneTv(1)">Age + 1</button>
-              <button class="btn-remote-action" onclick="userRenameTv('Rocky')">Rename ("Rocky")</button>
+            <div class="card-emboss-addr" id="card-addr-1">${stepData.card1.addr}</div>
+            <div class="card-holder-label">
+              <span>HOLDER: <strong>${stepData.card1.holder}</strong></span>
+              <span id="card-bal-preview-1" style="color:var(--accent-emerald); font-weight:800;">$500</span>
+            </div>
+            <div style="font-size:10px; color:#94a3b8; font-family:var(--font-mono); margin-top:2px;">
+              STACK VAR: <span style="color:var(--accent-blue); font-weight:800;">account</span>
+            </div>
+            <div class="remote-keypad-grid" style="margin-top:6px;">
+              <button class="tactile-remote-btn" onclick="userWithdraw(100, 1)">Withdraw $100</button>
+              <button class="tactile-remote-btn" onclick="userDeposit(50, 1)">Deposit $50</button>
             </div>
           </div>
 
-          <div class="remote-box staged-from-left" id="remote-box-2">
-            <div class="remote-header">
-              <div style="display:flex; align-items:center; gap:6px;">
-                <span>${stepData.remote2.name}</span>
-                <button class="info-bubble-btn" data-hud-topic="aliasing" onclick="toggleHudTooltip(event, 'aliasing')" title="What is Aliasing?">i</button>
-              </div>
-              <span class="freq-tag">${stepData.remote2.freq}</span>
+          <!-- Debit Card 2 (jointCard: 0x4A2F - Aliased Duplicate) -->
+          <div class="debit-card-chassis staged-from-left revealed" id="card-box-2">
+            <div class="debit-card-top-row">
+              <div class="debit-chip"></div>
+              <span style="font-size:9px; background:rgba(251,191,36,0.15); color:var(--accent-amber); border:1px solid var(--accent-amber); padding:1px 4px; border-radius:3px; font-weight:800; font-family:var(--font-mono);">JOINT (ALIASED)</span>
             </div>
-            <code class="code-snippet">${formatScreenTextWithTerms(stepData.remote2.decl)}</code>
-            <div class="remote-actions">
-              <button class="btn-remote-action" onclick="userTuneTv(1)">Age + 1 (Via Remote 2)</button>
-              <button class="btn-remote-action" onclick="userDisconnectRemote(2)">Nullify Remote 2</button>
+            <div class="card-emboss-addr" id="card-addr-2">${stepData.card2.addr}</div>
+            <div class="card-holder-label">
+              <span>HOLDER: <strong>${stepData.card2.holder}</strong></span>
+              <span id="card-bal-preview-2" style="color:var(--accent-emerald); font-weight:800;">$500</span>
+            </div>
+            <div style="font-size:10px; color:#94a3b8; font-family:var(--font-mono); margin-top:2px;">
+              STACK VAR: <span style="color:var(--accent-emerald); font-weight:800;">jointCard</span>
+            </div>
+            <div class="remote-keypad-grid" style="margin-top:6px;">
+              <button class="tactile-remote-btn" onclick="userWithdraw(100, 2)">Withdraw $100 (Bob)</button>
+              <button class="tactile-remote-btn" onclick="userNullifyCard(2)" style="color:var(--accent-rose); border-color:rgba(239,68,68,0.3);">Shred Card (null)</button>
             </div>
           </div>
+
         </div>
 
+        <!-- Right: Central Bank Vault Display (Heap Object) -->
         <div class="tv-column">
-          <div class="smart-tv-device staged-from-right" id="smart-tv-box">
-            <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; font-weight:800; color:var(--accent-emerald); font-family:var(--font-mono);">
-              <div style="display:flex; align-items:center; gap:6px;">
-                <span>${stepData.tv.label}</span>
-                <button class="info-bubble-btn" data-hud-topic="memory-address" onclick="toggleHudTooltip(event, 'memory-address')" title="What is address 0x4A2F?">i</button>
-              </div>
-              <span id="tv-hex-addr">${stepData.tv.address}</span>
+          <div class="bank-vault-cabinet staged-from-right revealed" id="bank-vault-box">
+            <div class="vault-bezel-top">
+              <span>CENTRAL BANK VAULT // HEAP MEMORY BLOCK</span>
+              <span id="vault-hex-addr" style="color:var(--accent-emerald); font-weight:800;">0x4A2F</span>
             </div>
-            <div class="tv-screen-content">
-              <div>Dog Name: <strong id="tv-name-val" style="color:var(--accent-blue);">"${stepData.tv.name}"</strong></div>
-              <div>Dog Age:&nbsp; <strong id="tv-age-val" style="color:var(--accent-amber);">${stepData.tv.age}</strong></div>
-              <div style="font-size:10px; color:#71717a; margin-top:6px;">Active Remotes Pointing Here: <span id="tv-remotes-count" style="color:var(--accent-emerald); font-weight:800;">2</span></div>
+            <div class="vault-stage-body">
+              <div class="vault-door-wheel-wrap">
+                <div class="vault-lock-dial" id="main-vault-lock-dial">⚙️</div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:4px; font-family:var(--font-mono);">
+                <div style="font-size:11px; color:#94a3b8;">SHARED VAULT BALANCE:</div>
+                <div class="vault-balance-display" id="vault-balance-val">$${stepData.vault.balance}</div>
+                <div style="display:flex; align-items:center; gap:6px; margin-top:4px;">
+                  <span class="vault-status-badge" id="vault-status-badge">
+                    <span style="font-size:8px;">●</span>
+                    <span id="vault-remotes-count">2 ACTIVE DEBIT CARDS</span>
+                  </span>
+                  <span style="font-size:10px; color:#94a3b8;">// 100% SOLVENT</span>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:10px; padding-top:6px; border-top:1px solid #22222a; font-family:var(--font-mono); font-size:10px; color:#94a3b8; display:flex; justify-content:space-between;">
+              <span>HotSpot: 8B Mark + 4B Klass + 4B Balance = 16B</span>
+              <span style="color:var(--accent-emerald); font-weight:800;">GC Roots Active</span>
             </div>
           </div>
-          <div class="staged-pop" id="golden-rule-box" style="margin-top:12px; font-size:11.5px; background:#0d0d11; border:1px solid #27272a; border-radius:6px; padding:8px 12px; color:#cbd5e1; width:100%; position:relative;">
+
+          <!-- Pass-by-Value Golden Law Anchor -->
+          <div class="staged-pop revealed" id="golden-rule-box" style="margin-top:10px; font-size:11.5px; background:#0d0d11; border:1px solid #27272a; border-radius:6px; padding:8px 12px; color:#cbd5e1; width:100%; position:relative;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-              <span style="font-weight:800; color:var(--accent-amber); font-family:var(--font-mono); font-size:10px;">🌟 GOLDEN MEMORY LAW</span>
+              <span style="font-weight:800; color:var(--accent-amber); font-family:var(--font-mono); font-size:10px;">🌟 JLS §8.4.1 THE GOLDEN LAW</span>
               <button class="info-bubble-btn" data-hud-topic="golden-rule" onclick="toggleHudTooltip(event, 'golden-rule')" title="Pass-by-Value Rule">i</button>
             </div>
             <div id="golden-rule-text">${formatScreenTextWithTerms(isTelugish ? stepData.goldenAnchor_telugish : stepData.goldenAnchor_en)}</div>
@@ -444,13 +631,14 @@ function renderStepView(stepData) {
         </div>
       </div>
     `;
+    setTimeout(drawRemoteLaserBeams, 80);
   } else if (stepData.step === 3) {
     // Step 3: JVMS Dual IDE & Live Memory Visualizer
     DOM.bodyMount.innerHTML = `
       <div class="step3-ide-grid">
         <div class="ide-editor-panel staged-from-left" id="step3-ide-panel">
           <div style="display:flex; justify-content:space-between; color:#71717a; font-size:10px; margin-bottom:6px; border-bottom:1px solid #27272a; padding-bottom:4px;">
-            <span>MemoryMasterclass.java</span>
+            <span>BankingMasterclass.java</span>
             <span id="ide-active-frame-lbl" style="color:var(--accent-blue);">FRAME: main()</span>
           </div>
           <div id="code-rows-container">
@@ -461,7 +649,7 @@ function renderStepView(stepData) {
               Step 1: main() initialized on top of the Call Stack.
             </div>
             <div style="font-size:10.5px; color:var(--accent-blue); font-family:var(--font-mono); margin-top:4px;" id="ide-token-breakdown">
-              Token: int age = 3 &bull; Stored as 32-bit integer bits in Stack slot 1.
+              Token: int deposit = 500 &bull; Stored as 32-bit integer bits in Stack slot 1.
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; padding-top:6px; border-top:1px solid #27272a;">
               <div style="display:flex; gap:6px;">
@@ -539,9 +727,6 @@ function renderStepView(stepData) {
 }
 
 // 3. STEP PRESENTATION RUNNER (Real-time Word-Driven Synchronization)
-let currentSyncPhase = 0;
-let lastFocusedContainerId = null;
-
 function setFocusedVisual(containerId, textSpanId, focusClass) {
   if (lastFocusedContainerId === containerId) return;
   lastFocusedContainerId = containerId;
@@ -628,11 +813,11 @@ function runStepPresentation(stepData) {
 
 // REAL-TIME EVENT-DRIVEN VISUAL SYNCHRONIZATION
 function onPlaybackWordBoundary(charIndex, charLength) {
-  // 1. Highlight subtitle word
-  highlightCaptionWord(charIndex);
-
-  // 2. Drive screen visuals in 100% mechanical lockstep with spoken word
+  // 1. Drive screen visuals & update active container focus FIRST
   syncScreenVisualsToSpokenPosition(charIndex);
+
+  // 2. Highlight subtitle caption word and matching scoped screen words
+  highlightCaptionWord(charIndex);
 }
 
 function syncScreenVisualsToSpokenPosition(charIndex) {
@@ -650,7 +835,12 @@ function syncScreenVisualsToSpokenPosition(charIndex) {
     const cue2 = text.indexOf("Room 2") !== -1 ? text.indexOf("Room 2") - 15 : 300;
     const cue3 = text.indexOf("30-Second Mystery") !== -1 ? text.indexOf("30-Second Mystery") - 15 : 480;
 
-    if (charIndex >= cue1 && charIndex < cue2) {
+    if (charIndex < cue1) {
+      if (lastFocusedContainerId !== null) {
+        lastFocusedContainerId = null;
+        clearSyncFocusClasses();
+      }
+    } else if (charIndex >= cue1 && charIndex < cue2) {
       if (currentSyncPhase !== 1) {
         currentSyncPhase = 1;
         const desk = document.getElementById('card-desk');
@@ -682,43 +872,43 @@ function syncScreenVisualsToSpokenPosition(charIndex) {
       }
     }
   } else if (stepIdx === 2) {
-    const cue1 = Math.max(20, text.indexOf("Remote 1") !== -1 ? text.indexOf("Remote 1") - 15 : 85);
-    const cue2 = text.indexOf("Smart TV") !== -1 ? text.indexOf("Smart TV") - 15 : 180;
-    const cue3 = (text.indexOf("d2 = dog") !== -1 ? text.indexOf("d2 = dog") : text.indexOf("Aliasing")) - 15;
-    const cue4 = text.indexOf("Golden") !== -1 ? text.indexOf("Golden") - 15 : 420;
+    const cue1 = Math.max(20, (text.indexOf("Debit Card 1") !== -1 ? text.indexOf("Debit Card 1") : (text.indexOf("Card 1") !== -1 ? text.indexOf("Card 1") : 75)) - 15);
+    const cue2 = (text.indexOf("Central Bank Vault") !== -1 ? text.indexOf("Central Bank Vault") : (text.indexOf("Vault") !== -1 ? text.indexOf("Vault") : 180)) - 15;
+    const cue3 = (text.indexOf("jointCard") !== -1 ? text.indexOf("jointCard") : text.indexOf("Aliasing")) - 15;
+    const cue4 = (text.indexOf("Golden") !== -1 ? text.indexOf("Golden") : 400) - 15;
 
     if (charIndex >= cue1 && charIndex < cue2) {
       if (currentSyncPhase !== 1) {
         currentSyncPhase = 1;
-        const rem1 = document.getElementById('remote-box-1');
-        if (rem1 && !rem1.classList.contains('revealed')) {
-          rem1.classList.add('revealed');
+        const card1 = document.getElementById('card-box-1');
+        if (card1 && !card1.classList.contains('revealed')) {
+          card1.classList.add('revealed');
           window.AudioEngine.playWhoosh();
         }
-        setFocusedVisual('remote-box-1', null, 'sync-focused');
+        setFocusedVisual('card-box-1', null, 'sync-focused');
       }
     } else if (charIndex >= cue2 && charIndex < cue3) {
       if (currentSyncPhase !== 2) {
         currentSyncPhase = 2;
-        const tv = document.getElementById('smart-tv-box');
-        if (tv && !tv.classList.contains('revealed')) {
-          tv.classList.add('revealed');
+        const vault = document.getElementById('bank-vault-box');
+        if (vault && !vault.classList.contains('revealed')) {
+          vault.classList.add('revealed');
           window.AudioEngine.playBeep(520, 0.08);
           setTimeout(drawRemoteLaserBeams, 100);
         }
-        setFocusedVisual('smart-tv-box', null, 'sync-focused-emerald');
+        setFocusedVisual('bank-vault-box', null, 'sync-focused-emerald');
       }
     } else if (charIndex >= cue3 && charIndex < cue4) {
       if (currentSyncPhase !== 3) {
         currentSyncPhase = 3;
-        const rem2 = document.getElementById('remote-box-2');
-        if (rem2 && !rem2.classList.contains('revealed')) {
-          rem2.classList.add('revealed');
+        const card2 = document.getElementById('card-box-2');
+        if (card2 && !card2.classList.contains('revealed')) {
+          card2.classList.add('revealed');
           window.AudioEngine.playBeep(580, 0.08);
           setTimeout(drawRemoteLaserBeams, 100);
           setTimeout(flashLaserBeam, 300);
         }
-        setFocusedVisual('remote-box-2', null, 'sync-focused');
+        setFocusedVisual('card-box-2', null, 'sync-focused');
       }
     } else if (charIndex >= cue4) {
       if (currentSyncPhase !== 4) {
@@ -842,57 +1032,150 @@ function highlightCaptionWord(charIndex) {
 }
 
 // ==========================================================================
-// 5. OFFICIAL SPEC KNOWLEDGE PATHWAY REGISTRY (JLS / JVMS 4 MULTI-TABS)
+// 5. OFFICIAL SPEC KNOWLEDGE PATHWAY REGISTRY (JLS / JVMS 4 MASTER TEACHER STAGES)
 // ==========================================================================
 const CONCEPT_REGISTRY = {
-  'variable-primitive': {
-    badge: 'JLS §4.2 // PRIMITIVE VALUES',
-    title: 'Local Primitive Variable (e.g. int age = 3)',
+  'bankaccount-vs-account': {
+    badge: '20+ YR MASTER TEACHER // 3 JVM REALMS',
+    title: 'BankAccount (Class) vs. account (Variable) — The 3 Worlds of Java',
     analogy: `
       <div class="cmodal-section">
-        <div class="cmodal-section-title">💡 The Sticky Note on Your Personal Desk</div>
-        <p>Think of writing the number <code>3</code> directly on a sticky note sitting on your personal study desk. It holds the actual raw bits directly, not a phone number or address to another location. If you pass it to a friend, you copy the number onto a new sticky note. When they erase their note, yours remains completely untouched!</p>
+        <div class="cmodal-section-title">💡 The 3 Worlds: Blueprint vs. Debit Card vs. Central Vault</div>
+        <p>In the line <code>BankAccount account = new BankAccount("Alice", 1000);</code>, a beginner thinks there is only one entity called "account". A senior master teacher knows Java is coordinating <strong>three completely separate physical realms in computer RAM</strong>:</p>
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin:12px 0;">
+          <div style="background:#09090b; border:1px solid #38bdf8; border-radius:6px; padding:10px;">
+            <div style="color:#38bdf8; font-weight:800; font-size:11px;">1. BankAccount (Capital B)</div>
+            <div style="font-size:10.5px; color:#a1a1aa; margin-top:4px;"><strong>The Metaspace Blueprint</strong>. Just class metadata, bytecode, and method specifications. You cannot withdraw money from a blueprint!</div>
+          </div>
+          <div style="background:#09090b; border:1px solid #818cf8; border-radius:6px; padding:10px;">
+            <div style="color:#818cf8; font-weight:800; font-size:11px;">2. account (Lowercase a)</div>
+            <div style="font-size:10.5px; color:#a1a1aa; margin-top:4px;"><strong>The Debit Card in Your Pocket</strong> on the Stack desk. Holds only the 4-byte reference pointer <code>0x4A2F</code>. Reclaimed in 0.001ms when the method exits.</div>
+          </div>
+          <div style="background:#09090b; border:1px solid #34d399; border-radius:6px; padding:10px;">
+            <div style="color:#34d399; font-weight:800; font-size:11px;">3. new BankAccount(...)</div>
+            <div style="font-size:10.5px; color:#a1a1aa; margin-top:4px;"><strong>The Central Bank Vault</strong> on the Heap warehouse. Takes 16 bytes of RAM (Header + Fields). Managed and protected by the JVM Garbage Collector.</div>
+          </div>
+        </div>
       </div>
     `,
     spec: `
       <div class="cmodal-section">
-        <div class="cmodal-section-title">🏛️ JVMS §2.6.1 & JLS §4.2 Architecture</div>
-        <p>In the JVM, primitive types (<code>byte</code>, <code>short</code>, <code>int</code>, <code>long</code>, <code>float</code>, <code>double</code>, <code>char</code>, <code>boolean</code>) store direct value bits in the Local Variable Array of the executing method's Stack Frame.</p>
-        <ul style="margin-left:18px; margin-top:6px;">
-          <li><strong>Memory Footprint:</strong> 32-bit slot for <code>int</code> directly on the CPU Stack.</li>
-          <li><strong>Hardware Management:</strong> CPU RSP Register adjusts stack depth with zero Garbage Collection pauses.</li>
-          <li><strong>Lifecycle:</strong> Deallocated in 0.001ms the instant the method frame pops.</li>
-        </ul>
+        <div class="cmodal-section-title">🔬 JVMS §2.5, §2.6 & OpenJDK HotSpot Architecture</div>
+        <div style="font-size:11.5px; color:#e4e4e7; line-height:1.5;">
+          <p><strong>1. Metaspace (JVMS §2.5.4):</strong> Stores <code>InstanceKlass</code> metadata, constant pool, bytecode for <code>withdraw()</code> and <code>deposit()</code>. Loaded once into native process memory.</p>
+          <p><strong>2. Stack Frame Local Variable Table (JVMS §2.6.1):</strong> Holds the 32-bit (Compressed OOP) or 64-bit reference address <code>0x4A2F</code> in Slot 2. Deallocated automatically on method return via CPU RSP register adjustment.</p>
+          <p><strong>3. Heap Memory (JVMS §2.5.3):</strong> Allocates 16 bytes aligned to an 8-byte boundary:</p>
+          <ul style="margin-left:18px; margin-top:4px; font-family:var(--font-mono); font-size:11px; color:#a1a1aa;">
+            <li>[0..7] Mark Word (8 Bytes): Identity HashCode, GC Age (0..15), Biased Lock state bits.</li>
+            <li>[8..11] Klass Word (4 Bytes): Compressed pointer to Metaspace <code>BankAccount.class</code>.</li>
+            <li>[12..15] Payload Field: <code>int balance = 1000</code> (4 Bytes). Total = 16 bytes!</li>
+          </ul>
+        </div>
       </div>
     `,
     minilab: `
       <div class="cmodal-section">
-        <div class="cmodal-section-title">⚡ Live Primitive Slot Mutation Test</div>
-        <p>Test modifying <code>localAge</code> inside a helper method:</p>
-        <div style="background:#141418; padding:8px 12px; border-radius:6px; border:1px solid #27272a; margin:8px 0; font-family:var(--font-mono);">
-          <div>main() Slot 1: int age = <strong style="color:var(--accent-blue);" id="lab-prim-main">3</strong></div>
-          <div>modify() Slot 1: int localAge = <strong style="color:var(--accent-emerald);" id="lab-prim-mod">3</strong></div>
+        <div class="cmodal-section-title">⚠️ The Classic Interview Trap (FAANG & University Exams)</div>
+        <div style="background:#141418; padding:10px 12px; border-radius:6px; border:1px solid #27272a; margin:8px 0;">
+          <div style="color:var(--accent-amber); font-weight:800; font-size:11px;">TRICK QUESTION:</div>
+          <p style="margin:4px 0; font-size:11.5px;">If Bob executes <code>jointCard = null;</code>, did the Central Bank Vault in memory collapse?</p>
+          <div style="margin-top:8px; padding-top:8px; border-top:1px solid #27272a; color:var(--accent-emerald); font-weight:700;">
+            MASTER TEACHER VERDICT: Absolutely NOT!
+          </div>
+          <p style="font-size:11px; color:#a1a1aa; margin-top:4px;">Setting <code>jointCard = null</code> only zeros out Bob's 4-byte debit card pointer in his stack slot (<code>0x0000</code>). Alice's card (<code>account = 0x4A2F</code>) remains an active GC Root! The physical Central Bank Vault on the Heap remains 100% solvent, safe, and reachable.</p>
         </div>
-        <button onclick="testPrimitiveMutation()" class="btn-ide-step" style="padding:6px 14px; font-weight:800; background:var(--accent-blue); color:#09090b; border:none; border-radius:4px;">Execute: localAge += 5</button>
-        <div id="lab-prim-result" style="margin-top:8px; font-size:11px; color:#94a3b8;">Click to verify that main()'s age is 100% untouched!</div>
       </div>
     `,
     pathway: `
       <div class="cmodal-section">
-        <div class="cmodal-section-title">🎯 Interview Mastery & Traps</div>
-        <p><strong>Trap Q: Are primitive variables always stored on the Stack?</strong><br>
-        <strong style="color:var(--accent-emerald);">Answer: NO!</strong> Only <em>local method variables</em> live on the stack. Primitive <em>fields</em> of an object (e.g. <code>class Dog { int age; }</code>) live on the <strong>Heap</strong> inside the object's instance payload!</p>
-        <div style="margin-top:8px; font-weight:700; color:var(--accent-blue);">Recommended Next Milestone: Object Instance Memory Layout (JOL)</div>
+        <div class="cmodal-section-title">🧪 Interactive 3-World Banking Sandbox</div>
+        <p>Experiment with modifying each of the 3 distinct realms:</p>
+        <div style="display:flex; gap:8px; margin:10px 0; flex-wrap:wrap;">
+          <button onclick="simulateWorldAction('nullify')" class="btn-ide-step" style="padding:6px 12px; background:rgba(239,68,68,0.2); border:1px solid var(--accent-rose); color:var(--accent-rose); border-radius:4px; font-weight:800; font-size:11px;">1. Shred Bob's Card (jointCard = null)</button>
+          <button onclick="simulateWorldAction('withdraw')" class="btn-ide-step" style="padding:6px 12px; background:rgba(56,189,248,0.2); border:1px solid var(--accent-blue); color:var(--accent-blue); border-radius:4px; font-weight:800; font-size:11px;">2. Withdraw $200 (jointCard.withdraw(200))</button>
+          <button onclick="simulateWorldAction('gc')" class="btn-ide-step" style="padding:6px 12px; background:rgba(52,211,153,0.2); border:1px solid var(--accent-emerald); color:var(--accent-emerald); border-radius:4px; font-weight:800; font-size:11px;">3. Audit GC Roots (System.gc())</button>
+        </div>
+        <div id="world-sim-status" style="font-family:var(--font-mono); font-size:11px; background:#09090b; border:1px solid #27272a; border-radius:6px; padding:8px 10px; color:#a1a1aa;">
+          Ready. Click any action to watch the Stack, Heap, and Metaspace react in real time.
+        </div>
+      </div>
+    `
+  },
+  'variable-primitive': {
+    badge: 'JLS §4.2, §4.12 & JVMS §2.6.1 // VALUE-TYPE SEMANTICS',
+    title: 'Primitive Variable (int deposit = 500 vs. account.balance = 1000)',
+    analogy: `
+      <div class="cmodal-section">
+        <div class="cmodal-section-title">💡 The Truth About Primitives: Local Variable vs. Object Field</div>
+        <p>A common misconception in computer science is believing <em>"all primitive variables live on the Stack"</em>. In reality, <strong>where a variable is declared dictates where it lives in physical memory</strong>:</p>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0;">
+          <div style="background:#09090b; border:1px solid #818cf8; border-radius:6px; padding:10px;">
+            <div style="color:#818cf8; font-weight:800; font-size:11px;">1. Local Primitive (int deposit = 500)</div>
+            <div style="font-size:10.5px; color:#a1a1aa; margin-top:4px;">Declared inside <code>main()</code>. Stored directly in the <strong>Thread's Stack Frame</strong> (Local Variable Table Slot 1). Holds the raw 32-bit integer bits directly. Zero GC overhead, cleared in 0.001 milliseconds when the method finishes!</div>
+          </div>
+          <div style="background:#09090b; border:1px solid #34d399; border-radius:6px; padding:10px;">
+            <div style="color:#34d399; font-weight:800; font-size:11px;">2. Instance Field (account.balance = 1000)</div>
+            <div style="font-size:10.5px; color:#a1a1aa; margin-top:4px;">Declared inside <code>class BankAccount { int balance; }</code>. Stored physically inside the <strong>BankAccount Object on the Heap</strong> at byte offset 12! It lives as long as the vault object is alive.</div>
+          </div>
+        </div>
+        <p style="font-size:11px; color:#cbd5e1;">When you call <code>processTransaction(account, deposit)</code>, Java reads the raw 32 bits from <code>main</code>'s local deposit variable, copies them into the method's parameter slot, and isolates them completely. Modifying one has <strong>zero effect</strong> on the other!</p>
+      </div>
+    `,
+    spec: `
+      <div class="cmodal-section">
+        <div class="cmodal-section-title">🔬 Official Specifications (JLS §4.2, §4.12 & JVMS §2.6.1)</div>
+        <div style="font-size:11.5px; color:#e4e4e7; line-height:1.5;">
+          <p><strong>1. Direct Value Storage (JLS §4.12.1):</strong> A variable of a primitive type always holds the raw value of that type, never a pointer or reference address. For <code>int</code>, this is a 32-bit signed two's-complement integer.</p>
+          <p><strong>2. Bytecode Execution (JVMS §6.5):</strong></p>
+          <ul style="margin-left:18px; margin-top:4px; font-family:var(--font-mono); font-size:11px; color:#a1a1aa;">
+            <li><code>sipush 500</code> &rarr; Pushes literal integer 500 onto the operand stack.</li>
+            <li><code>istore_1</code> &rarr; Pops 500 and writes raw 32 bits into Local Variable Array slot 1 (<code>deposit</code>).</li>
+            <li><code>iload_1</code> &rarr; Reads 32 bits from slot 1 to evaluate expressions or pass to methods.</li>
+          </ul>
+          <p><strong>3. Zero Heap Footprint:</strong> A local primitive has no object header, no Klass pointer, and no garbage collection overhead. Managed entirely by the CPU hardware stack pointer (RSP) in 0.001 milliseconds.</p>
+        </div>
+      </div>
+    `,
+    minilab: `
+      <div class="cmodal-section">
+        <div class="cmodal-section-title">⚠️ The Classic Interview Trap (Pass-by-Value Proof)</div>
+        <div style="background:#141418; padding:10px 12px; border-radius:6px; border:1px solid #27272a; margin:8px 0;">
+          <div style="color:var(--accent-amber); font-weight:800; font-size:11px;">TRICK QUESTION:</div>
+          <pre class="code-snippet" style="margin:4px 0; padding:6px; font-size:11px;">void addBonus(int deposit) { deposit = deposit + 100; }
+int myDeposit = 500;
+addBonus(myDeposit);
+System.out.println(myDeposit); // What prints: 500 or 600?</pre>
+          <div style="margin-top:6px; padding-top:6px; border-top:1px solid #27272a; color:var(--accent-emerald); font-weight:700;">
+            MASTER TEACHER VERDICT: Prints 500!
+          </div>
+          <p style="font-size:11px; color:#a1a1aa; margin-top:4px;">Under JLS §8.4.1, Java is <strong>strictly Pass-by-Value</strong>. The method <code>addBonus()</code> receives a completely separate copy of the 32 bits in its own isolated stack frame. When <code>addBonus()</code> returns, its stack frame is instantly destroyed by RSP. <code>main</code>'s <code>myDeposit</code> was never touched!</p>
+        </div>
+      </div>
+    `,
+    pathway: `
+      <div class="cmodal-section">
+        <div class="cmodal-section-title">🧪 Interactive Stack vs. Heap Deposit Simulator</div>
+        <p>Watch how modifying the local variable compares to modifying the Heap object field:</p>
+        <div style="background:#09090b; padding:10px 12px; border-radius:6px; border:1px solid #27272a; margin:8px 0; font-family:var(--font-mono); font-size:11px;">
+          <div>[STACK FRAME] main() Slot 1: int deposit = <strong style="color:var(--accent-blue);" id="lab-prim-main">500</strong></div>
+          <div>[STACK FRAME] processTransaction() Slot 1: int localDeposit = <strong style="color:var(--accent-emerald);" id="lab-prim-mod">500</strong></div>
+          <div>[HEAP STORAGE] BankAccount at 0x4A2F &rarr; Field 'balance' = <strong style="color:var(--accent-amber);" id="lab-prim-heap">1000</strong></div>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button onclick="testPrimitiveMutation()" class="btn-ide-step" style="padding:6px 12px; font-weight:800; background:var(--accent-blue); color:#09090b; border:none; border-radius:4px; font-size:11px;">1. Mutate localDeposit += 100</button>
+          <button onclick="testHeapFieldMutation()" class="btn-ide-step" style="padding:6px 12px; font-weight:800; background:var(--accent-amber); color:#09090b; border:none; border-radius:4px; font-size:11px;">2. Mutate vault.balance -= 200</button>
+        </div>
+        <div id="lab-prim-result" style="margin-top:8px; font-size:11px; color:#94a3b8; font-family:var(--font-mono);">Click an action to verify memory isolation!</div>
       </div>
     `
   },
   'object-reference': {
     badge: 'JLS §4.3 // REFERENCE VALUES',
-    title: 'Object Reference (e.g. Dog dog)',
+    title: 'Object Reference (e.g. BankAccount account)',
     analogy: `
       <div class="cmodal-section">
-        <div class="cmodal-section-title">💡 The TV Remote Control Model</div>
-        <p>An object variable in Java is NOT the physical object! It is an infrared <strong>TV Remote Control</strong> tuned to frequency code <code>0x4A2F</code>. The actual 65-inch Smart TV lives in the Heap Warehouse. Passing an object copies the remote control frequency, NEVER the television!</p>
+        <div class="cmodal-section-title">💡 The Tactical Debit Card Model</div>
+        <p>An object variable in Java is NOT the physical object! It is a <strong>Tactile Debit Card</strong> encoded with account address <code>0x4A2F</code>. The actual physical Central Bank Vault lives in the Heap Warehouse. Passing an object copies the debit card pointer, NEVER the vault itself!</p>
       </div>
     `,
     spec: `
@@ -903,11 +1186,11 @@ const CONCEPT_REGISTRY = {
     `,
     minilab: `
       <div class="cmodal-section">
-        <div class="cmodal-section-title">⚡ Remote Signal & Address Inspection</div>
+        <div class="cmodal-section-title">⚡ Debit Card Signal & Address Inspection</div>
         <div style="font-family:var(--font-mono); background:#141418; padding:8px 12px; border-radius:6px; border:1px solid #27272a; margin:8px 0;">
-          Stack Slot: Dog dog = <span style="color:var(--accent-emerald);">0x4A2F</span> &rarr; Points to Heap: Dog("Bruno", 3)
+          Stack Slot: BankAccount account = <span style="color:var(--accent-emerald);">0x4A2F</span> &rarr; Points to Heap: BankAccount("Alice", $1000)
         </div>
-        <button onclick="flashLaserBeam(); window.AudioEngine.playBeep(640, 0.08);" class="btn-ide-step" style="padding:6px 14px; background:var(--accent-emerald); color:#09090b; font-weight:800; border:none; border-radius:4px;">Fire Remote Signal 📡</button>
+        <button onclick="flashLaserBeam(); window.AudioEngine.playBeep(640, 0.08);" class="btn-ide-step" style="padding:6px 14px; background:var(--accent-emerald); color:#09090b; font-weight:800; border:none; border-radius:4px;">Fire Transaction Signal 📡</button>
       </div>
     `,
     pathway: `
@@ -923,25 +1206,25 @@ const CONCEPT_REGISTRY = {
     title: 'new Keyword (Heap Object Allocation)',
     analogy: `
       <div class="cmodal-section">
-        <div class="cmodal-section-title">💡 Ordering From the Factory</div>
-        <p>Writing <code>new</code> is like calling the manufacturer to build a brand new physical device. It reserves space on an open warehouse shelf, constructs the instance, and hands you back the shelf address (<code>0x4A2F</code>).</p>
+        <div class="cmodal-section-title">💡 Constructing the Central Vault</div>
+        <p>Writing <code>new</code> instructs the JVM to construct a brand new physical object on the Heap. It reserves space on an open heap block, runs the constructor to initialize fields, and hands you back the memory address (<code>0x4A2F</code>).</p>
       </div>
     `,
     spec: `
       <div class="cmodal-section">
         <div class="cmodal-section-title">🏛️ JVMS §6.5 Bytecode Sequence</div>
         <ol style="margin-left:18px; margin-top:6px;">
-          <li><code>new #2 &lt;Dog&gt;</code>: Allocates memory on the heap and zeros fields.</li>
+          <li><code>new #2 &lt;BankAccount&gt;</code>: Allocates memory on the heap and zeros fields.</li>
           <li><code>dup</code>: Duplicates reference on top of operand stack.</li>
-          <li><code>invokespecial #3 &lt;Dog.&lt;init&gt;&gt;</code>: Calls constructor with arguments.</li>
+          <li><code>invokespecial #3 &lt;BankAccount.&lt;init&gt;&gt;</code>: Calls constructor with arguments.</li>
         </ol>
       </div>
     `,
     minilab: `
       <div class="cmodal-section">
         <div class="cmodal-section-title">⚡ Heap Allocation Simulation</div>
-        <p>Memory reserved on heap: <strong>24 Bytes</strong> (16B header + 4B int age + 4B reference pointer).</p>
-        <button onclick="window.AudioEngine.playWhoosh();" class="btn-ide-step" style="padding:6px 14px; background:var(--accent-amber); color:#09090b; font-weight:800; border:none; border-radius:4px;">Allocate New Heap Instance 📦</button>
+        <p>Memory reserved on heap: <strong>16 Bytes</strong> (12B header + 4B int balance).</p>
+        <button onclick="window.AudioEngine.playWhoosh();" class="btn-ide-step" style="padding:6px 14px; background:var(--accent-amber); color:#09090b; font-weight:800; border:none; border-radius:4px;">Allocate New BankAccount Vault 📦</button>
       </div>
     `,
     pathway: `
@@ -966,8 +1249,8 @@ const CONCEPT_REGISTRY = {
         <div class="cmodal-section-title">🏛️ JVMS §2.5.2 & §2.6 Specification</div>
         <p>Each JVM thread has a private stack created at thread startup. Stores LIFO frames containing:</p>
         <ul style="margin-left:18px; margin-top:4px;">
-          <li><strong>Local Variable Array:</strong> Method parameters and local primitive / reference variables.</li>
-          <li><strong>Operand Stack:</strong> Workspace where JVM bytecode executes calculations.</li>
+          <li><strong>Local Variable Table:</strong> Method parameters and local primitives (int deposit = 500) and reference pointers (account = 0x4A2F).</li>
+          <li><strong>Operand Stack:</strong> High-speed CPU workspace where calculations are performed.</li>
           <li><strong>Frame Data:</strong> Constant pool references and method return information.</li>
         </ul>
       </div>
@@ -976,8 +1259,8 @@ const CONCEPT_REGISTRY = {
       <div class="cmodal-section">
         <div class="cmodal-section-title">⚡ Call Stack LIFO Simulation</div>
         <div style="background:#141418; padding:8px 12px; border-radius:6px; border:1px solid #27272a; font-family:var(--font-mono);">
-          <div>[TOP] Tray 2: modify(Dog d, int localAge) - Active</div>
-          <div>[ROOT] Tray 1: main(String[] args) - Paused</div>
+          <div>[TOP] Frame 2: processTransaction(BankAccount b, int localDeposit) - Active</div>
+          <div>[ROOT] Frame 1: main(String[] args) - Paused</div>
         </div>
       </div>
     `,
@@ -991,11 +1274,11 @@ const CONCEPT_REGISTRY = {
   },
   'heap-memory': {
     badge: 'JVMS §2.5.3 // HEAP STORAGE POOL',
-    title: 'Heap Memory (The Big Shared Warehouse)',
+    title: 'Heap Memory (The Central Bank Vault)',
     analogy: `
       <div class="cmodal-section">
-        <div class="cmodal-section-title">💡 The Big Shared Warehouse</div>
-        <p>A massive, global IKEA warehouse shared by all threads. Whenever you write <code>new</code>, an object is placed on a warehouse shelf. It stays safe as long as someone has a remote control for it.</p>
+        <div class="cmodal-section-title">💡 The Shared Central Bank Vault</div>
+        <p>A massive, global bank vault shared by all threads. Whenever you write <code>new BankAccount()</code>, an object is constructed on a heap shelf. It stays safe and solvent as long as an active debit card points to it.</p>
       </div>
     `,
     spec: `
@@ -1008,7 +1291,7 @@ const CONCEPT_REGISTRY = {
       <div class="cmodal-section">
         <div class="cmodal-section-title">⚡ Garbage Collector Reachability Check</div>
         <div id="lab-gc-shelf" style="background:#141418; padding:8px 12px; border-radius:6px; border:1px solid #27272a; font-family:var(--font-mono); margin-bottom:8px;">
-          Shelf 0x7B9C: Dog("Max", 1) &bull; Active Remotes: 0 (Orphan)
+          Vault 0x7B9C: BankAccount("Bob", $2000) &bull; Active Debit Cards: 0 (Orphan)
         </div>
         <button onclick="testGcSweepLab()" class="btn-ide-step" style="padding:6px 14px; background:var(--accent-rose); color:#ffffff; font-weight:800; border:none; border-radius:4px;">Run GC Sweep 🤖</button>
         <div id="lab-gc-result" style="margin-top:8px; font-size:11px; color:#94a3b8;">Click Run to simulate tracing GC sweep!</div>
@@ -1026,8 +1309,8 @@ const CONCEPT_REGISTRY = {
     title: 'Memory Address Coordinate (0x4A2F)',
     analogy: `
       <div class="cmodal-section">
-        <div class="cmodal-section-title">💡 Street Address on RAM Street</div>
-        <p>Just like a house number tells the mail carrier exactly which house to deliver to, <code>0x4A2F</code> tells the CPU exactly which shelf in physical RAM holds this Dog.</p>
+        <div class="cmodal-section-title">💡 Bank Vault Account Coordinate</div>
+        <p>Just like a bank routing number tells the clearing house where funds are kept, <code>0x4A2F</code> tells the CPU exactly which 16-byte block in physical RAM holds this BankAccount vault.</p>
       </div>
     `,
     spec: `
@@ -1051,39 +1334,39 @@ const CONCEPT_REGISTRY = {
     pathway: `
       <div class="cmodal-section">
         <div class="cmodal-section-title">🎯 Tooling Knowledge</div>
-        <p>Use <strong>JOL (Java Object Layout)</strong> to inspect memory addresses, object headers, and padding in real applications: <code>ClassLayout.parseInstance(dog).toPrintable()</code>.</p>
+        <p>Use <strong>JOL (Java Object Layout)</strong> to inspect memory addresses, object headers, and padding in real applications: <code>ClassLayout.parseInstance(account).toPrintable()</code>.</p>
       </div>
     `
   },
   'aliasing': {
     badge: 'JLS §4.3.1 // ALIASING',
-    title: 'Aliasing (Two Remotes, One TV)',
+    title: 'Aliasing (Two Debit Cards, One Bank Vault)',
     analogy: `
       <div class="cmodal-section">
-        <div class="cmodal-section-title">💡 Two Remotes, One Living Room Screen</div>
-        <p>Writing <code>Dog d2 = dog;</code> does NOT build a second TV! It simply gives your friend a second remote tuned to the same living room TV. Changing channels on Remote 2 immediately changes what Remote 1 sees!</p>
+        <div class="cmodal-section-title">💡 Two Debit Cards, One Shared Bank Vault</div>
+        <p>Writing <code>BankAccount jointCard = account;</code> does NOT build a second vault! It simply gives Bob a joint debit card programmed with the identical vault address (<code>0x4A2F</code>). Withdrawing through Bob's card immediately alters the balance Alice sees on her mobile app!</p>
       </div>
     `,
     spec: `
       <div class="cmodal-section">
         <div class="cmodal-section-title">🏛️ JLS §4.3.1 Specification</div>
-        <p>Writing <code>d2 = dog;</code> copies the 64-bit address value <code>0x4A2F</code> into <code>d2</code>'s slot. Both reference variables now point to the identical heap object instance.</p>
+        <p>Writing <code>jointCard = account;</code> copies the 4-byte reference pointer <code>0x4A2F</code> into <code>jointCard</code>'s stack slot. Both reference variables now point to the identical heap object instance.</p>
       </div>
     `,
     minilab: `
       <div class="cmodal-section">
         <div class="cmodal-section-title">⚡ Aliasing Mutation Simulator</div>
         <div style="font-family:var(--font-mono); background:#141418; padding:8px 12px; border-radius:6px; border:1px solid #27272a; margin-bottom:8px;">
-          Shared TV Screen: Name = <strong style="color:var(--accent-blue);" id="lab-alias-name">"Bruno"</strong>
+          Shared Vault Balance = <strong style="color:var(--accent-blue);" id="lab-alias-name">$1000</strong>
         </div>
-        <button onclick="testAliasingLab()" class="btn-ide-step" style="padding:6px 14px; background:var(--accent-emerald); color:#09090b; font-weight:800; border:none; border-radius:4px;">Execute: d2.setName("Rocky") 📡</button>
-        <div id="lab-alias-result" style="margin-top:8px; font-size:11px; color:#94a3b8;">Click to verify that Remote 1 also sees "Rocky"!</div>
+        <button onclick="testAliasingLab()" class="btn-ide-step" style="padding:6px 14px; background:var(--accent-emerald); color:#09090b; font-weight:800; border:none; border-radius:4px;">Execute: jointCard.withdraw(200) 💳</button>
+        <div id="lab-alias-result" style="margin-top:8px; font-size:11px; color:#94a3b8;">Click to verify that Card 1 (account) also sees $800!</div>
       </div>
     `,
     pathway: `
       <div class="cmodal-section">
         <div class="cmodal-section-title">🎯 Architectural Defense</div>
-        <p>How to prevent accidental aliasing bugs? Use <strong>Defensive Copying</strong> or <strong>Immutable Objects</strong> (e.g. Java Records or <code>final</code> fields)!</p>
+        <p>How to prevent accidental aliasing bugs? Use <strong>Defensive Copying</strong> (Joshua Bloch <em>Effective Java</em> Item 50) or <strong>Immutable Objects</strong> (e.g. Java Records or <code>final</code> fields)!</p>
       </div>
     `
   },
@@ -1092,8 +1375,8 @@ const CONCEPT_REGISTRY = {
     title: 'Java is STRICTLY Pass-by-Value',
     analogy: `
       <div class="cmodal-section">
-        <div class="cmodal-section-title">💡 Photocopying the Remote</div>
-        <p>Java ALWAYS passes by value. Passing an object copies the remote control's frequency code (<code>0x4A2F</code>). Both methods now have remotes pointing to the same TV, but neither method has access to the caller's variable!</p>
+        <div class="cmodal-section-title">💡 Photocopying the Debit Card</div>
+        <p>Java ALWAYS passes by value. Passing an object copies the debit card's 4-byte address code (<code>0x4A2F</code>). Both methods now have cards pointing to the same vault, but neither method has access to the caller's variable!</p>
       </div>
     `,
     spec: `
@@ -1105,8 +1388,8 @@ const CONCEPT_REGISTRY = {
     minilab: `
       <div class="cmodal-section">
         <div class="cmodal-section-title">⚡ Reassignment Test</div>
-        <p><code>void modify(Dog d) { d = new Dog("Max", 1); }</code></p>
-        <p style="color:var(--accent-emerald);">Does main's dog change to Max? <strong>NO!</strong> You only reassigned modify's local copy of the remote!</p>
+        <p><code>void processTransaction(BankAccount b) { b = new BankAccount("Bob", 2000); }</code></p>
+        <p style="color:var(--accent-emerald);">Does main's account change to Bob? <strong>NO!</strong> You only reassigned processTransaction's local copy of the debit card!</p>
       </div>
     `,
     pathway: `
@@ -1123,7 +1406,7 @@ const CONCEPT_REGISTRY = {
     analogy: `
       <div class="cmodal-section">
         <div class="cmodal-section-title">💡 Automated Warehouse Recycling Robot</div>
-        <p>An automated cleaning robot that periodically scans the warehouse. If a television has ZERO remotes pointing to it (orphan), the robot safely dismantles it to free the shelf for future objects.</p>
+        <p>An automated cleaning robot that periodically scans the heap warehouse. If a central bank vault has ZERO debit cards pointing to it (orphan with 0 GC roots), the robot safely dismantles and recycles the 16-byte memory block to free up space for future allocations.</p>
       </div>
     `,
     spec: `
@@ -1205,6 +1488,16 @@ const CONCEPT_REGISTRY = {
 
 function openConceptPathway(conceptKey) {
   const aliasMap = {
+    'bankaccount': 'bankaccount-vs-account',
+    'account': 'bankaccount-vs-account',
+    'bankaccount-vs-account': 'bankaccount-vs-account',
+    'debit-card': 'bankaccount-vs-account',
+    'vault': 'heap-memory',
+    'deposit': 'variable-primitive',
+    'balance': 'variable-primitive',
+    'class': 'bankaccount-vs-account',
+    'blueprint': 'bankaccount-vs-account',
+    'mystery-puzzle': 'bankaccount-vs-account',
     'stack': 'stack-memory',
     'heap': 'heap-memory',
     'variable': 'variable-primitive',
@@ -1215,15 +1508,13 @@ function openConceptPathway(conceptKey) {
     'address': 'memory-address',
     'pass-by-value': 'pass-by-value',
     'golden-rule': 'pass-by-value',
-    'mystery-puzzle': 'object-reference',
-    'tv-remote': 'object-reference',
     'gc': 'garbage-collector',
     'stackoverflow': 'stackoverflow-error',
     'outofmemory': 'outofmemory-error'
   };
 
   const resolvedKey = aliasMap[conceptKey] || conceptKey;
-  const data = CONCEPT_REGISTRY[resolvedKey] || CONCEPT_REGISTRY['object-reference'];
+  const data = CONCEPT_REGISTRY[resolvedKey] || CONCEPT_REGISTRY['bankaccount-vs-account'];
   if (!data) return;
 
   hideHudTooltip();
@@ -1264,34 +1555,70 @@ function switchConceptTab(tabName) {
 }
 window.switchConceptTab = switchConceptTab;
 
+function simulateWorldAction(action) {
+  const statusEl = document.getElementById('world-sim-status');
+  if (!statusEl) return;
+  if (action === 'nullify') {
+    statusEl.innerHTML = `<span style="color:var(--accent-rose); font-weight:800;">[1. STACK FRAME UPDATED]</span> Slot: jointCard = <strong style="color:var(--accent-rose);">null (0x0000)</strong>.<br>Bob's debit card is shredded, but Alice's card still points to Vault 0x4A2F &bull; Vault remains 100% solvent on the Heap!`;
+    window.AudioEngine.playBeep(320, 0.1);
+  } else if (action === 'withdraw') {
+    statusEl.innerHTML = `<span style="color:var(--accent-blue); font-weight:800;">[2. SIGNAL INVOKED]</span> jointCard &rarr; Vault 0x4A2F &rarr; withdraw(200) &rarr; 💳 Vault balance updated from $1000 to $800! Alice also observes $800!`;
+    window.AudioEngine.playBeep(720, 0.08);
+  } else if (action === 'gc') {
+    statusEl.innerHTML = `<span style="color:var(--accent-emerald); font-weight:800;">[3. TRACING GC AUDIT]</span> Garbage Collector traces from GC Roots (Thread stack). Alice's active card keeps Vault 0x4A2F reachable and safe!`;
+    window.AudioEngine.playBeep(520, 0.12);
+  }
+}
+window.simulateWorldAction = simulateWorldAction;
+
 function testPrimitiveMutation() {
   const mainEl = document.getElementById('lab-prim-main');
   const modEl = document.getElementById('lab-prim-mod');
   const resEl = document.getElementById('lab-prim-result');
   if (modEl) {
-    modEl.textContent = '8';
+    modEl.textContent = '600';
     modEl.style.color = '#34d399';
   }
   if (mainEl) {
-    mainEl.textContent = '3';
+    mainEl.textContent = '500';
     mainEl.style.color = '#38bdf8';
   }
   if (resEl) {
-    resEl.innerHTML = '<span style="color:#34d399; font-weight:800;">PASS-BY-VALUE PROOF:</span> modify\'s localAge changed from 3 to 8, but main\'s age is STILL 3!';
+    resEl.innerHTML = '<span style="color:#34d399; font-weight:800;">PASS-BY-VALUE PROOF (JLS §8.4.1):</span> processTransaction() added 100 to its own local parameter (now 600), but main()\'s Stack slot is 100% UNTOUCHED (still 500)!';
   }
   window.AudioEngine.playBeep(640, 0.08);
 }
 window.testPrimitiveMutation = testPrimitiveMutation;
 
+function testHeapFieldMutation() {
+  const heapEl = document.getElementById('lab-prim-heap');
+  const mainEl = document.getElementById('lab-prim-main');
+  const resEl = document.getElementById('lab-prim-result');
+  if (heapEl) {
+    let cur = parseInt(heapEl.textContent, 10) || 1000;
+    cur -= 200;
+    heapEl.textContent = cur;
+    heapEl.style.color = '#fbbf24';
+  }
+  if (mainEl) {
+    mainEl.textContent = '500';
+  }
+  if (resEl) {
+    resEl.innerHTML = '<span style="color:#fbbf24; font-weight:800;">HEAP ISOLATION PROOF:</span> Mutated field \'balance\' inside Central Vault object (now 800), while main()\'s local variable \'deposit\' on the Stack remains strictly 500!';
+  }
+  window.AudioEngine.playBeep(580, 0.08);
+}
+window.testHeapFieldMutation = testHeapFieldMutation;
+
 function testAliasingLab() {
   const tvEl = document.getElementById('lab-alias-name');
   const resEl = document.getElementById('lab-alias-result');
   if (tvEl) {
-    tvEl.textContent = '"Rocky"';
+    tvEl.textContent = '$800';
     tvEl.style.color = '#34d399';
   }
   if (resEl) {
-    resEl.innerHTML = '<span style="color:#34d399; font-weight:800;">ALIASING PROOF:</span> Mutating through Remote 2 instantly updated what Remote 1 sees on screen!';
+    resEl.innerHTML = '<span style="color:#34d399; font-weight:800;">ALIASING PROOF:</span> Withdrawing through Card 2 (jointCard) instantly updated what Card 1 (account) observes in the shared vault!';
   }
   window.AudioEngine.playBeep(580, 0.08);
 }
@@ -1303,10 +1630,10 @@ function testGcSweepLab() {
   if (shelf) {
     shelf.style.opacity = '0.35';
     shelf.style.border = '1px dashed #f43f5e';
-    shelf.innerHTML = '<span style="color:#f43f5e; font-weight:800;">[RECLAIMED BY TRACING GC] Free Shelf Space</span>';
+    shelf.innerHTML = '<span style="color:#f43f5e; font-weight:800;">[RECLAIMED BY TRACING GC] Free Vault Space</span>';
   }
   if (resEl) {
-    resEl.innerHTML = '<span style="color:#34d399; font-weight:800;">AUTOMATIC CLEANUP:</span> Object 0x7B9C had zero active remote handles, so the Tracing GC recycled it!';
+    resEl.innerHTML = '<span style="color:#34d399; font-weight:800;">AUTOMATIC CLEANUP:</span> Vault 0x7B9C had zero active debit card handles, so the Tracing GC recycled it!';
   }
   window.AudioEngine.playBeep(320, 0.1);
 }
@@ -1317,56 +1644,72 @@ const HUD_REGISTRY = {
   'stack-memory': {
     badge: 'JVMS §2.6 // THE QUICK DESK',
     title: 'Stack Memory (The Quick Study Desk)',
-    analogy: '💡 <strong>Everyday Analogy:</strong> Think of a student study desk with trays. Every running method gets its own neat tray. It is right in front of you, blazing fast, and swept clean in 0.001 milliseconds the moment your method finishes!',
-    desc: 'Stores primitive variables (int, double, boolean) and object remote addresses. Allocated in Last-In First-Out (LIFO) order with zero garbage collection overhead.',
-    actionLabel: '⚡ See 3-Tray LIFO Stack',
+    analogy: '💡 <strong>Everyday Analogy:</strong> Think of a student study desk with trays. Every running method gets its own neat tray. It is right in front of you, blazing fast (0.001ms), and swept clean the moment your method finishes!',
+    desc: 'Stores primitive variables (int deposit = 500) and debit card reference pointers. Managed by the CPU hardware RSP register in LIFO order with zero GC overhead.',
+    actionLabel: '⚡ See LIFO Stack Rack',
     actionType: 'tray-demo'
   },
   'heap-memory': {
-    badge: 'JVMS §2.5.3 // THE BIG WAREHOUSE',
-    title: 'Heap Memory (The Big Warehouse)',
-    analogy: '💡 <strong>Everyday Analogy:</strong> Think of a giant shared IKEA warehouse. Whenever you write "new", a big object is built and placed on a warehouse shelf. It stays safe as long as someone has a remote control for it.',
-    desc: 'Universal shared storage pool where all Java object instances and arrays reside. Lifetime is dynamic, kept organized and clean by the JVM Garbage Collector robot.',
-    actionLabel: '📦 Inspect Warehouse Shelf',
+    badge: 'JVMS §2.5.3 // THE CENTRAL VAULT',
+    title: 'Heap Memory (The Central Bank Vault)',
+    analogy: '💡 <strong>Everyday Analogy:</strong> Think of a secure central bank vault. Whenever you write "new BankAccount()", a 16-byte vault is constructed on the heap. It stays secure and solvent as long as someone has a debit card for it.',
+    desc: 'Universal shared storage pool where all Java object instances and arrays reside. Lifetime is dynamic, kept organized and clean by the JVM Garbage Collector.',
+    actionLabel: '📦 Inspect Vault Block',
     actionType: 'warehouse-demo'
   },
   'mystery-puzzle': {
     badge: 'INTERVIEW PUZZLE // CORE SECRET',
-    title: 'Where Does Dog dog = new Dog() Live?',
-    analogy: '💡 <strong>The Secret:</strong> The variable "dog" and the physical "Dog" object live in TWO completely separate rooms! You must never confuse the TV remote with the television.',
-    desc: 'The variable "dog" sits on your Quick Desk (Stack), holding a 64-bit frequency address (0x4A2F). The actual Dog instance lives in the Big Warehouse (Heap).',
+    title: 'Where Does BankAccount account = new BankAccount() Live?',
+    analogy: '💡 <strong>The Secret:</strong> The variable "account" and the physical "BankAccount" object live in TWO completely separate rooms! Never confuse the plastic debit card in your pocket with the steel vault on the heap.',
+    desc: 'The variable "account" sits on your Quick Desk (Stack), holding a 4-byte reference pointer (0x4A2F). The actual BankAccount instance lives in the Central Vault (Heap).',
     actionLabel: '💡 Reveal Full Memory Map',
     actionType: 'puzzle-answer'
   },
+  'bankaccount-vs-account': {
+    badge: '20+ YR MASTER TEACHER // 3 REALMS',
+    title: 'BankAccount (Class) vs. account (Variable)',
+    analogy: '💡 <strong>The 3 Realms:</strong> Blueprint in Metaspace vs. Debit Card in Pocket (Stack) vs. Physical Vault on the Heap. They coordinate across 3 separate physical memory areas!',
+    desc: 'Never confuse the blueprint with the reference card or the physical heap object instance.',
+    actionLabel: '🔬 Open Concept Pathway',
+    actionType: 'pathway-modal'
+  },
+  'debit-card': {
+    badge: 'THE #1 MENTAL MODEL // REFERENCES',
+    title: 'Object Reference = Tactical Debit Card',
+    analogy: '💡 <strong>The Debit Card Model:</strong> You don\'t carry the bank vault around in your wallet; you hold a debit card encoded with account address 0x4A2F. That card is your Java reference variable!',
+    desc: 'An object variable does not contain the object data. It contains only the hexadecimal memory address (0x4A2F) that points to the central vault in heap memory.',
+    actionLabel: '📡 Fire Card Signal',
+    actionType: 'flash-remote-1'
+  },
   'tv-remote': {
     badge: 'THE #1 MENTAL MODEL // REFERENCES',
-    title: 'Object Reference = TV Remote Control',
-    analogy: '💡 <strong>The Remote Model:</strong> When you buy a TV, you don\'t carry the TV around in your hand; you hold a remote control with an infrared frequency. That remote is your Java variable!',
-    desc: 'An object variable does not contain the object data. It contains only the hexadecimal memory address (0x4A2F) that points to the object in heap memory.',
-    actionLabel: '📡 Fire Signal to TV',
+    title: 'Object Reference = Tactical Debit Card',
+    analogy: '💡 <strong>The Debit Card Model:</strong> You hold a debit card encoded with address 0x4A2F. That card is your Java reference variable pointing to the vault on the heap!',
+    desc: 'An object variable contains only the hexadecimal memory address (0x4A2F) that points to the object in heap memory.',
+    actionLabel: '📡 Fire Card Signal',
     actionType: 'flash-remote-1'
   },
   'aliasing': {
     badge: 'CORE INTERVIEW CONCEPT // ALIASING',
-    title: 'Aliasing (Two Remotes, One TV)',
-    analogy: '💡 <strong>Two Remotes, One Screen:</strong> Writing Dog d2 = dog does NOT build a second TV! It simply gives your friend a second identical remote tuned to the same living room TV.',
-    desc: 'When two reference variables hold the identical memory address, changing an object field through one remote immediately changes what the second remote sees on screen.',
-    actionLabel: '⚡ Test Aliasing (+1 Age)',
+    title: 'Aliasing (Two Debit Cards, One Bank Vault)',
+    analogy: '💡 <strong>Joint Account:</strong> Writing BankAccount jointCard = account did NOT build a second vault! It simply issued Bob a joint debit card programmed with the same vault address (0x4A2F).',
+    desc: 'When two reference variables hold the identical memory address, changing the balance through one card immediately affects what the second card observes.',
+    actionLabel: '⚡ Test Aliasing (-$100)',
     actionType: 'test-aliasing'
   },
   'memory-address': {
     badge: 'PHYSICAL MEMORY ADDRESS // 0x4A2F',
     title: 'Memory Address (0x4A2F)',
-    analogy: '💡 <strong>Physical Address:</strong> Just like a house number on your street: 0x4A2F tells the computer CPU exactly which shelf in physical RAM holds this Dog.',
-    desc: 'A 64-bit hexadecimal coordinate pointing to the object header, mark word, and instance variables residing in the JVM heap space.',
-    actionLabel: '📡 Trace Frequency Wire',
+    analogy: '💡 <strong>Physical Coordinate:</strong> Just like a bank account number: 0x4A2F tells the computer CPU exactly which 16-byte block in physical RAM holds this vault.',
+    desc: 'A 32-bit (Compressed OOP) or 64-bit hexadecimal coordinate pointing to the object header, mark word, and instance variables residing in the JVM heap space.',
+    actionLabel: '📡 Trace Laser Bus',
     actionType: 'trace-beam'
   },
   'golden-rule': {
     badge: 'THE GOLDEN ANCHOR // PASS-BY-VALUE',
     title: 'Java is STRICTLY Pass-by-Value',
-    analogy: '💡 <strong>Photocopying the Remote:</strong> Passing an object to a method makes a photocopy of the remote control\'s frequency code. Both methods now have remotes pointing to the same TV!',
-    desc: 'Java NEVER passes objects by reference. It copies the bits inside the caller\'s variable. For primitives, it copies the number. For objects, it copies the remote control address.',
+    analogy: '💡 <strong>Photocopying the Debit Card:</strong> Passing an object to a method copies the card\'s 4-byte address bits. Both methods now have cards pointing to the same vault, but neither has access to the caller\'s variable!',
+    desc: 'Java NEVER passes objects by reference. It copies the bits inside the caller\'s variable. For primitives, it copies the number. For objects, it copies the reference address.',
     actionLabel: '📝 Open Revision Notes',
     actionType: 'open-notes'
   }
@@ -1536,28 +1879,28 @@ function triggerHudAction() {
       break;
 
     case 'warehouse-demo':
-      openDeepdiveModal("Heap Warehouse & The GC Robot", `
+      openDeepdiveModal("Central Bank Vault & The Garbage Collector", `
         <div style="background:#09090b; padding:14px; border-radius:8px; border:1px solid #27272a; margin-bottom:12px;">
-          <div style="font-size:11px; font-weight:800; color:var(--accent-emerald); margin-bottom:8px;">HEAP WAREHOUSE STORAGE (JVMS §2.5.3)</div>
+          <div style="font-size:11px; font-weight:800; color:var(--accent-emerald); margin-bottom:8px;">HEAP VAULT STORAGE (JVMS §2.5.3)</div>
           <div style="display:flex; flex-direction:column; gap:8px;">
             <div style="background:rgba(52,211,153,0.14); border:1px solid var(--accent-emerald); padding:8px 12px; border-radius:4px;">
               <div style="display:flex; justify-content:space-between;">
-                <span style="font-weight:700; color:#ffffff;">Shelf 0x4A2F: Dog ("Bruno", age: 3)</span>
-                <span style="color:var(--accent-emerald); font-weight:800; font-size:10px;">2 Active Remotes</span>
+                <span style="font-weight:700; color:#ffffff;">Vault 0x4A2F: BankAccount ("Alice", balance: $1000)</span>
+                <span style="color:var(--accent-emerald); font-weight:800; font-size:10px;">2 Active Debit Cards</span>
               </div>
-              <div style="font-size:10.5px; color:#94a3b8; margin-top:4px;">Safe! Pointed to by main.dog and modify.d.</div>
+              <div style="font-size:10.5px; color:#94a3b8; margin-top:4px;">Safe! Pointed to by main.account and jointCard.</div>
             </div>
             <div style="background:rgba(244,63,94,0.12); border:1px solid var(--accent-rose); padding:8px 12px; border-radius:4px;">
               <div style="display:flex; justify-content:space-between;">
-                <span style="font-weight:700; color:#ffffff;">Shelf 0x7B9C: Dog ("Ghost", age: 1)</span>
-                <span style="color:var(--accent-rose); font-weight:800; font-size:10px;">0 Active Remotes</span>
+                <span style="font-weight:700; color:#ffffff;">Vault 0x7B9C: BankAccount ("Bob", balance: $2000)</span>
+                <span style="color:var(--accent-rose); font-weight:800; font-size:10px;">0 Active Debit Cards</span>
               </div>
-              <div style="font-size:10.5px; color:#fca5a5; margin-top:4px;">Orphaned! The Garbage Collector robot will safely recycle this memory.</div>
+              <div style="font-size:10.5px; color:#fca5a5; margin-top:4px;">Orphaned! The Garbage Collector will safely recycle this memory block.</div>
             </div>
           </div>
         </div>
         <p><strong>The Garbage Collector Robot:</strong><br>
-        If every remote pointing to a television in the warehouse is dropped or set to null, the TV becomes an orphan. The Garbage Collector robot sweeps the warehouse and recycles that space automatically!</p>
+        If every debit card pointing to a bank vault in the heap is shredded or set to null, the vault becomes an unreachable orphan. The Garbage Collector sweeps the heap and recycles that space automatically!</p>
       `);
       break;
 
@@ -1566,7 +1909,7 @@ function triggerHudAction() {
       break;
 
     case 'test-aliasing':
-      userTuneTv(1);
+      userWithdraw(100, 2);
       flashLaserBeam();
       break;
 
@@ -1577,7 +1920,7 @@ function triggerHudAction() {
 
     case 'trace-beam':
       flashLaserBeam();
-      const addrEl = document.getElementById('tv-hex-addr');
+      const addrEl = document.getElementById('vault-hex-addr');
       if (addrEl) {
         addrEl.classList.add('sync-text-highlight');
         setTimeout(() => addrEl.classList.remove('sync-text-highlight'), 1200);
@@ -1596,12 +1939,48 @@ function revealPuzzleAnswer() {
   if (pCode) pCode.classList.add('sync-text-highlight');
   if (pText) {
     pText.innerHTML = `
-      <div style="background:rgba(52,211,153,0.15); border:1px solid var(--accent-emerald); border-radius:5px; padding:8px 10px; margin-top:4px;">
-        <span style="color:var(--accent-emerald); font-weight:800;">✨ THE ANSWER:</span><br>
-        <strong>1. Variable <code>dog</code>:</strong> Lives on the <strong>Stack (Quick Desk)</strong> holding remote frequency <code>0x4A2F</code>.<br>
-        <strong>2. Physical <code>Dog</code> object:</strong> Lives in the <strong>Heap (Big Warehouse)</strong> on shelf <code>0x4A2F</code>!
+      <div style="background:rgba(52,211,153,0.12); border:1px solid var(--accent-emerald); border-radius:6px; padding:10px 12px; margin-top:6px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <span style="color:var(--accent-emerald); font-weight:800; font-family:var(--font-mono); font-size:11px;">✨ 20+ YEAR MASTER EDUCATOR MODEL // 3 JVM WORLDS</span>
+          <button onclick="openConceptPathway('bankaccount-vs-account')" style="background:transparent; border:1px solid var(--accent-emerald); color:var(--accent-emerald); padding:2px 8px; border-radius:4px; font-size:10px; cursor:pointer; font-weight:700;">Deep Dive Guide ↗</button>
+        </div>
+        <div class="three-worlds-triad" id="three-worlds-triad">
+          <!-- World 1: BankAccount (Metaspace Class Blueprint) -->
+          <div class="world-card card-metaspace" onclick="openConceptPathway('bankaccount-vs-account')" title="Click for Master Teacher Guide">
+            <div class="world-realm-badge" style="background:rgba(56,189,248,0.15); color:var(--accent-blue);">WORLD 1: METASPACE (JVMS §2.5.4)</div>
+            <div class="world-token-title" style="color:var(--accent-blue);">BankAccount (Class)</div>
+            <div class="world-analogy-text"><strong>The Blueprint:</strong> Class metadata, method bytecode, layout in native RAM. You cannot withdraw from a blueprint!</div>
+            <div class="world-hardware-footer">
+              <span>Metaspace</span>
+              <span>BankAccount.class</span>
+            </div>
+          </div>
+
+          <!-- World 2: account (Stack Debit Card) -->
+          <div class="world-card card-stack" onclick="openConceptPathway('bankaccount-vs-account')" title="Click for Master Teacher Guide">
+            <div class="world-realm-badge" style="background:rgba(129,140,248,0.15); color:#818cf8;">WORLD 2: STACK FRAME (JVMS §2.6.1)</div>
+            <div class="world-token-title" style="color:#818cf8;">account (Variable)</div>
+            <div class="world-analogy-text"><strong>The Debit Card:</strong> Local variable slot holding address <code>0x4A2F</code>. Cleared in 0.001ms on return!</div>
+            <div class="world-hardware-footer">
+              <span>Stack Frame</span>
+              <span>32/64-bit Address</span>
+            </div>
+          </div>
+
+          <!-- World 3: new BankAccount() (Heap Central Vault) -->
+          <div class="world-card card-heap" onclick="openConceptPathway('bankaccount-vs-account')" title="Click for Master Teacher Guide">
+            <div class="world-realm-badge" style="background:rgba(52,211,153,0.15); color:var(--accent-emerald);">WORLD 3: HEAP STORAGE (JVMS §2.5.3)</div>
+            <div class="world-token-title" style="color:var(--accent-emerald);">new BankAccount("Alice", 1000)</div>
+            <div class="world-analogy-text"><strong>The Central Vault:</strong> Physical 16B RAM block (8B Mark Word + 4B Klass Word + 4B balance). Managed by GC.</div>
+            <div class="world-hardware-footer">
+              <span>Heap Storage</span>
+              <span>16B Allocated</span>
+            </div>
+          </div>
+        </div>
       </div>
     `;
+    MotionFX.revealTriad('three-worlds-triad');
   }
   window.AudioEngine.playBeep(640, 0.1);
 }
@@ -1664,102 +2043,269 @@ function switchNotesTab(tabName) {
 }
 
 function copyMasterNotes() {
-  const text = `JAVA MEMORY ARCHITECTURE & PASS-BY-VALUE MASTERCLASS NOTES
-==========================================================
-1. THE TWO ROOMS:
-- Stack: Personal study desk for local variables & method call frames. Ultra-fast (0.001ms), automatic LIFO cleanup. If full: StackOverflowError.
-- Heap: Big shared warehouse for all objects created with 'new'. Managed by Garbage Collector. If full: OutOfMemoryError.
+  const text = `VOIDRD // SPATIAL SYSTEMS CINEMA: JAVA MEMORY ARCHITECTURE & PASS-BY-VALUE
+================================================================================
+1. THE TWO ROOMS OF MEMORY (JVMS §2.5, §2.6):
+- Stack: Personal study desk for local variables & method call frames (int deposit = 500). Ultra-fast (0.001ms RSP adjust), automatic LIFO cleanup. If full: StackOverflowError.
+- Heap: Big shared warehouse for all object instances created with 'new' (new BankAccount("Alice", 1000)). Managed by Garbage Collector. If full: OutOfMemoryError.
 
-2. THE TV REMOTE MODEL:
-- Variables are TV Remotes holding an address (e.g. 0x4A2F), NOT the physical TV.
-- 'Dog d2 = dog;' creates a duplicate remote pointed at the SAME TV (Aliasing)!
+2. THE DEBIT CARD MODEL (JLS §4.3 & CAY HORSTMANN):
+- Object variables are Debit Cards holding a reference address (0x4A2F), NOT the physical bank vault!
+- 'BankAccount jointCard = account;' issues a duplicate debit card pointing to the SAME vault (Aliasing)!
+- Withdrawing via jointCard mutates the shared vault balance for both cardholders.
+- 'jointCard = null;' shreds Bob's card; the central vault remains alive and safe via Alice's card.
 
-3. PASS-BY-VALUE:
-- Java is 100% strictly Pass-by-Value!
-- Passing an object copies the remote control's frequency code (0x4A2F), NEVER the physical television!
+3. JAVA IS STRICTLY PASS-BY-VALUE (JLS §8.4.1):
+- Java NEVER passes by reference. It strictly copies bits!
+- For primitives: copies the raw 32/64-bit value bits.
+- For objects: copies the 4-byte reference pointer address (0x4A2F).
+- Reassigning 'b = new BankAccount(...)' inside a method only buys a new card for the local parameter; the caller's variable remains 100% untouched!
 `;
   navigator.clipboard.writeText(text);
-  alert("📋 Full Masterclass Revision & Architecture Notes copied to clipboard!");
+  alert("📋 Full VoidRD Masterclass Revision & Architecture Notes copied to clipboard!");
 }
 
-// 7. INTERACTIVE STEP 2 MANIPULATIVES
-function userTuneTv(delta) {
-  const ageEl = document.getElementById('tv-age-val');
-  if (!ageEl) return;
-  let cur = parseInt(ageEl.textContent, 10) || 3;
-  cur += delta;
-  ageEl.textContent = cur;
+// ==========================================================================
+// INTERACTIVE SIMULATION & MANIPULATIVES (Top YouTube Educational Engine)
+// ==========================================================================
+function simulatePushFrame() {
+  const rack = document.getElementById('live-stack-rack');
+  const rsp = document.getElementById('rsp-pointer-badge');
+  if (!rack) return;
+  const existingHelper = document.getElementById('helper-frame-slot');
+  if (existingHelper) {
+    simulatePopFrame();
+    return;
+  }
+  const helperSlot = document.createElement('div');
+  helperSlot.id = 'helper-frame-slot';
+  helperSlot.className = 'stack-slot-cell';
+  helperSlot.style.borderLeftColor = 'var(--accent-amber)';
+  helperSlot.innerHTML = `
+    <span>Slot 3: <strong style="color:var(--accent-amber);">processTransaction() frame</strong></span>
+    <span style="color:var(--accent-amber); font-weight:800;">int localDeposit = 600</span>
+  `;
+  rack.appendChild(helperSlot);
+  if (rsp) rsp.textContent = 'RSP -> modify() Frame (LIFO Top)';
+
+  if (window.anime) {
+    window.anime({
+      targets: helperSlot,
+      translateY: [-12, 0],
+      opacity: [0, 1],
+      easing: 'spring(1, 80, 12, 0)',
+      duration: 500
+    });
+  }
+  window.AudioEngine.playWhoosh();
+}
+window.simulatePushFrame = simulatePushFrame;
+
+function simulatePopFrame() {
+  const helper = document.getElementById('helper-frame-slot');
+  const rsp = document.getElementById('rsp-pointer-badge');
+  if (!helper) return;
+  if (window.anime) {
+    window.anime({
+      targets: helper,
+      translateY: [0, -12],
+      opacity: [1, 0],
+      duration: 300,
+      easing: 'easeInQuad',
+      complete: () => {
+        helper.remove();
+        if (rsp) rsp.textContent = 'RSP -> main() Stack Frame';
+      }
+    });
+  } else {
+    helper.remove();
+    if (rsp) rsp.textContent = 'RSP -> main() Stack Frame';
+  }
+  window.AudioEngine.playBeep(420, 0.08);
+}
+window.simulatePopFrame = simulatePopFrame;
+
+// 7. INTERACTIVE STEP 1 & 2 BANKING MANIPULATIVES (Living Vault & Debit Cards)
+let activeVaultBalance = 500;
+let card1Balance = 500;
+let card2Balance = 500;
+let card2Nullified = false;
+
+function userWithdraw(amount, cardNum = 1) {
+  if (cardNum === 2 && card2Nullified) {
+    window.AudioEngine.playBeep(240, 0.15);
+    return;
+  }
+  if (activeVaultBalance < amount) {
+    window.AudioEngine.playBeep(220, 0.2);
+    return;
+  }
+  const oldBal = activeVaultBalance;
+  activeVaultBalance -= amount;
+  card1Balance = activeVaultBalance;
+  card2Balance = activeVaultBalance;
+
+  updateVaultDisplay(oldBal, activeVaultBalance);
+  updateCardsDisplay();
+  spinVaultDial();
+
+  const fromEl = document.getElementById(cardNum === 2 ? 'card-box-2' : 'card-box-1');
+  const toEl = document.getElementById('bank-vault-box') || document.getElementById('card-warehouse');
+  if (fromEl && toEl) {
+    MotionFX.shootDataPacket(fromEl.getBoundingClientRect(), toEl.getBoundingClientRect(), `-$${amount}`, '#38bdf8');
+  }
+  flashLaserBeam();
   window.AudioEngine.playBeep(640, 0.08);
-  flashLaserBeam();
 }
+window.userWithdraw = userWithdraw;
 
-function userRenameTv(newName) {
-  const nameEl = document.getElementById('tv-name-val');
-  if (!nameEl) return;
-  nameEl.textContent = `"${newName}"`;
-  window.AudioEngine.playBeep(580, 0.08);
+function userDeposit(amount, cardNum = 1) {
+  if (cardNum === 2 && card2Nullified) {
+    window.AudioEngine.playBeep(240, 0.15);
+    return;
+  }
+  const oldBal = activeVaultBalance;
+  activeVaultBalance += amount;
+  card1Balance = activeVaultBalance;
+  card2Balance = activeVaultBalance;
+
+  updateVaultDisplay(oldBal, activeVaultBalance);
+  updateCardsDisplay();
+  spinVaultDial();
+
+  const fromEl = document.getElementById(cardNum === 2 ? 'card-box-2' : 'card-box-1');
+  const toEl = document.getElementById('bank-vault-box') || document.getElementById('card-warehouse');
+  if (fromEl && toEl) {
+    MotionFX.shootDataPacket(fromEl.getBoundingClientRect(), toEl.getBoundingClientRect(), `+$${amount}`, '#34d399');
+  }
   flashLaserBeam();
+  window.AudioEngine.playBeep(720, 0.08);
 }
+window.userDeposit = userDeposit;
 
-function userDisconnectRemote(remoteNum) {
-  const rem = document.getElementById('remote-box-' + remoteNum);
-  const countEl = document.getElementById('tv-remotes-count');
-  if (rem) rem.style.opacity = '0.35';
-  if (countEl) countEl.textContent = '1';
+function userNullifyCard(cardNum = 2) {
+  const cardBox = document.getElementById('card-box-' + cardNum);
+  const addrEl = document.getElementById('card-addr-' + cardNum);
+  const countEl = document.getElementById('vault-remotes-count');
+
+  card2Nullified = true;
+  if (cardBox) {
+    cardBox.classList.add('card-nullified');
+  }
+  if (addrEl) {
+    addrEl.textContent = '0x0000 (null)';
+  }
+  if (countEl) {
+    countEl.textContent = '1 ACTIVE DEBIT CARD (Alice)';
+  }
+
   clearLaserBeams();
-  drawSingleLaser('remote-box-1', 'smart-tv-box');
-  window.AudioEngine.playBeep(320, 0.1);
+  drawSingleLaser('card-box-1', 'bank-vault-box');
+  window.AudioEngine.playBeep(320, 0.12);
+}
+window.userNullifyCard = userNullifyCard;
+
+function userAuditGc() {
+  const shelf = document.getElementById('heap-shelf-4a2f');
+  const dial = document.getElementById('step1-vault-dial');
+  if (shelf) MotionFX.pulseElement(shelf);
+  if (dial && window.anime) {
+    window.anime({
+      targets: dial,
+      rotate: '+=360',
+      duration: 600,
+      easing: 'spring(1, 80, 10, 0)'
+    });
+  }
+  const disp = document.getElementById('heap-vault-balance-display');
+  if (disp) {
+    const orig = disp.textContent;
+    disp.innerHTML = '<span style="color:#34d399; font-size:11px;">[GC ROOTS: 100% REACHABLE]</span>';
+    setTimeout(() => {
+      if (disp) disp.textContent = orig;
+    }, 2200);
+  }
+  window.AudioEngine.playBeep(520, 0.12);
+}
+window.userAuditGc = userAuditGc;
+
+function spinVaultDial() {
+  const dials = document.querySelectorAll('.vault-lock-dial');
+  if (window.anime && dials.length > 0) {
+    window.anime({
+      targets: dials,
+      rotate: '+=360',
+      duration: 650,
+      easing: 'spring(1, 80, 10, 0)'
+    });
+  }
+}
+
+function updateVaultDisplay(oldBal, newBal) {
+  const valEl = document.getElementById('vault-balance-val');
+  const shelfBal = document.getElementById('shelf-vault-bal');
+  const step1Bal = document.getElementById('heap-vault-balance-display');
+
+  if (valEl) {
+    if (window.anime) {
+      const obj = { val: oldBal };
+      window.anime({
+        targets: obj,
+        val: newBal,
+        round: 1,
+        easing: 'easeOutQuad',
+        duration: 400,
+        update: () => {
+          valEl.textContent = `$${obj.val}`;
+        }
+      });
+    } else {
+      valEl.textContent = `$${newBal}`;
+    }
+  }
+  if (shelfBal) shelfBal.textContent = `$${newBal}`;
+  if (step1Bal) step1Bal.textContent = `$${newBal}`;
+}
+
+function updateCardsDisplay() {
+  const p1 = document.getElementById('card-bal-preview-1');
+  const p2 = document.getElementById('card-bal-preview-2');
+  if (p1) p1.textContent = `$${card1Balance}`;
+  if (p2) p2.textContent = `$${card2Balance}`;
 }
 
 function drawRemoteLaserBeams() {
   const svg = document.getElementById('laser-wire-svg');
   if (!svg) return;
   svg.innerHTML = '';
-  drawSingleLaser('remote-box-1', 'smart-tv-box');
-  const rem2 = document.getElementById('remote-box-2');
-  if (rem2 && rem2.style.opacity !== '0.35') {
-    drawSingleLaser('remote-box-2', 'smart-tv-box');
+  drawSingleLaser('card-box-1', 'bank-vault-box');
+  const card2 = document.getElementById('card-box-2');
+  if (card2 && !card2Nullified) {
+    drawSingleLaser('card-box-2', 'bank-vault-box');
   }
 }
 
-function drawSingleLaser(fromId, toId) {
+function drawSingleLaser(fromId, toId, options = {}) {
   const svg = document.getElementById('laser-wire-svg');
   const fromEl = document.getElementById(fromId);
   const toEl = document.getElementById(toId);
-  const parent = document.getElementById('step2-sandbox');
-  if (!svg || !fromEl || !toEl || !parent) return;
-
-  const pRect = parent.getBoundingClientRect();
-  const fRect = fromEl.getBoundingClientRect();
-  const tRect = toEl.getBoundingClientRect();
-
-  const x1 = fRect.right - pRect.left;
-  const y1 = fRect.top + fRect.height / 2 - pRect.top;
-  const x2 = tRect.left - pRect.left;
-  const y2 = tRect.top + tRect.height / 2 - pRect.top;
-
-  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-  line.setAttribute('x1', x1);
-  line.setAttribute('y1', y1);
-  line.setAttribute('x2', x2);
-  line.setAttribute('y2', y2);
-  line.setAttribute('stroke', '#38bdf8');
-  line.setAttribute('stroke-width', '2');
-  line.setAttribute('stroke-dasharray', '4,4');
-  svg.appendChild(line);
+  if (!svg || !fromEl || !toEl) return null;
+  return MotionFX.drawCurvedLaser(svg, fromEl, toEl, options);
 }
 
 function flashLaserBeam() {
   const svg = document.getElementById('laser-wire-svg');
   if (!svg) return;
-  svg.querySelectorAll('line').forEach(l => {
-    l.setAttribute('stroke', '#34d399');
-    l.setAttribute('stroke-width', '3');
+  svg.querySelectorAll('path.laser-pulse-line').forEach(p => {
+    p.setAttribute('stroke', '#34d399');
+    p.setAttribute('stroke-width', '3.5');
     setTimeout(() => {
-      l.setAttribute('stroke', '#38bdf8');
-      l.setAttribute('stroke-width', '2');
-    }, 250);
+      p.setAttribute('stroke', '#38bdf8');
+      p.setAttribute('stroke-width', '2');
+    }, 320);
   });
+  const vault = document.getElementById('bank-vault-box');
+  if (vault) MotionFX.pulseElement(vault);
 }
 
 function clearLaserBeams() {
@@ -1770,39 +2316,39 @@ function clearLaserBeams() {
 // 8. RENDER STEP 3 SUB-STEPS
 const IDE_TOKEN_BREAKDOWNS = [
   {
-    token: "int age = 3;",
-    desc_en: "🔍 <strong>Token Breakdown:</strong> <code>int</code> (32-bit primitive type) &bull; <code>age</code> (local variable identifier) &bull; <code>= 3</code> (direct integer bits placed into main's Stack Slot 1). JVMS Bytecode: <code>iconst_3</code> &rarr; <code>istore_1</code>.",
-    desc_telugish: "🔍 <strong>Token Breakdown:</strong> <code>int</code> (32-bit primitive) &bull; <code>age</code> (local variable) &bull; <code>= 3</code> (direct raw value bits main stack slot 1 lo store aindi). Bytecode: <code>iconst_3</code> &rarr; <code>istore_1</code>."
+    token: "int deposit = 500;",
+    desc_en: "🔍 <strong>Token Breakdown:</strong> <code>int</code> (32-bit primitive type) &bull; <code>deposit</code> (local variable identifier) &bull; <code>= 500</code> (raw 32-bit integer bits stored directly in main's Stack Slot 1). JVMS Bytecode: <code>sipush 500</code> &rarr; <code>istore_1</code>.",
+    desc_telugish: "🔍 <strong>Token Breakdown:</strong> <code>int</code> (32-bit primitive) &bull; <code>deposit</code> (local variable) &bull; <code>= 500</code> (raw bits direct ga main stack slot 1 lo store ayyayi). Bytecode: <code>sipush 500</code> &rarr; <code>istore_1</code>."
   },
   {
-    token: "Dog dog = new Dog(\"Bruno\", age);",
-    desc_en: "🔍 <strong>Token Breakdown:</strong> <code>new Dog(...)</code> allocates 16-byte object on Heap at <code>0x4A2F</code> &bull; <code>dog</code> (Stack slot 2) receives only the 64-bit reference address (The TV Remote!). JVMS Bytecode: <code>new #2</code> &rarr; <code>dup</code> &rarr; <code>invokespecial #3</code> &rarr; <code>astore_2</code>.",
-    desc_telugish: "🔍 <strong>Token Breakdown:</strong> <code>new Dog(...)</code> Heap warehouse lo <code>0x4A2F</code> daggara object build chesindi &bull; <code>dog</code> variable ki kevalam TV remote address vachindi. Bytecode: <code>new</code> &rarr; <code>dup</code> &rarr; <code>invokespecial</code> &rarr; <code>astore</code>."
+    token: "BankAccount account = new BankAccount(\"Alice\", 1000);",
+    desc_en: "🔍 <strong>Token Breakdown:</strong> <code>new BankAccount(...)</code> allocates 16-byte vault on Heap at <code>0x4A2F</code> &bull; <code>account</code> (Stack slot 2) receives only the 4-byte reference pointer (The Debit Card!). JVMS Bytecode: <code>new #2</code> &rarr; <code>dup</code> &rarr; <code>invokespecial #3</code> &rarr; <code>astore_2</code>.",
+    desc_telugish: "🔍 <strong>Token Breakdown:</strong> <code>new BankAccount(...)</code> Heap warehouse lo <code>0x4A2F</code> daggara 16-byte vault build chesindi &bull; <code>account</code> variable ki kevalam debit card address vachindi. Bytecode: <code>new</code> &rarr; <code>dup</code> &rarr; <code>invokespecial</code> &rarr; <code>astore</code>."
   },
   {
-    token: "modify(dog, age);",
-    desc_en: "🔍 <strong>Token Breakdown:</strong> Pushes new Frame for <code>modify()</code> &bull; Parameter <code>d</code> gets duplicate remote (<code>0x4A2F</code>) &bull; Parameter <code>localAge</code> gets independent copy of number <code>3</code> (Pass-by-Value). JVMS Bytecode: <code>aload_2</code> &rarr; <code>iload_1</code> &rarr; <code>invokestatic #4</code>.",
-    desc_telugish: "🔍 <strong>Token Breakdown:</strong> <code>modify()</code> kosam kotha tray push ayyindi &bull; <code>d</code> ki duplicate remote (<code>0x4A2F</code>) &bull; <code>localAge</code> ki 3 independent copy vachindi. Bytecode: <code>aload_2</code> &rarr; <code>iload_1</code> &rarr; <code>invokestatic</code>."
+    token: "processTransaction(account, deposit);",
+    desc_en: "🔍 <strong>Token Breakdown:</strong> Pushes new Frame for <code>processTransaction()</code> &bull; Parameter <code>b</code> gets duplicate debit card (<code>0x4A2F</code>) &bull; Parameter <code>localDeposit</code> gets independent copy of number <code>500</code> (Pass-by-Value). JVMS Bytecode: <code>aload_2</code> &rarr; <code>iload_1</code> &rarr; <code>invokestatic #4</code>.",
+    desc_telugish: "🔍 <strong>Token Breakdown:</strong> <code>processTransaction()</code> kosam kotha stack frame push ayyindi &bull; <code>b</code> ki duplicate debit card (<code>0x4A2F</code>) &bull; <code>localDeposit</code> ki 500 independent copy vachindi. Bytecode: <code>aload_2</code> &rarr; <code>iload_1</code> &rarr; <code>invokestatic</code>."
   },
   {
-    token: "localAge = localAge + 5;",
-    desc_en: "🔍 <strong>Token Breakdown:</strong> <code>localAge + 5</code> evaluates to 8 on operand stack &bull; Overwrites ONLY modify's local Slot 1. main's age note (3) is in an isolated frame and completely untouched! JVMS Bytecode: <code>iload_1</code> &rarr; <code>iconst_5</code> &rarr; <code>iadd</code> &rarr; <code>istore_1</code>.",
-    desc_telugish: "🔍 <strong>Token Breakdown:</strong> <code>localAge + 5</code> modify tray meeda 8 ga marindi &bull; main frame lo unna age 3 alane safe ga undi! Bytecode: <code>iload_1</code> &rarr; <code>iconst_5</code> &rarr; <code>iadd</code> &rarr; <code>istore_1</code>."
+    token: "localDeposit = localDeposit + 100;",
+    desc_en: "🔍 <strong>Token Breakdown:</strong> <code>localDeposit + 100</code> evaluates to 600 on operand stack &bull; Overwrites ONLY processTransaction's local Slot 1. main's deposit ($500) is in an isolated frame and completely untouched! JVMS Bytecode: <code>iload_1</code> &rarr; <code>bipush 100</code> &rarr; <code>iadd</code> &rarr; <code>istore_1</code>.",
+    desc_telugish: "🔍 <strong>Token Breakdown:</strong> <code>localDeposit + 100</code> processTransaction frame meeda 600 ga marindi &bull; main frame lo unna deposit ($500) alane safe ga undi! Bytecode: <code>iload_1</code> &rarr; <code>bipush 100</code> &rarr; <code>iadd</code> &rarr; <code>istore_1</code>."
   },
   {
-    token: "d.setName(\"Rocky\");",
-    desc_en: "🔍 <strong>Token Breakdown:</strong> Dereferences remote handle <code>0x4A2F</code> to reach single shared object on Heap shelf &bull; Mutates field 'name' to \"Rocky\". Both remotes see \"Rocky\" on screen! JVMS Bytecode: <code>aload_0</code> &rarr; <code>ldc #5</code> &rarr; <code>invokevirtual #6</code>.",
-    desc_telugish: "🔍 <strong>Token Breakdown:</strong> Remote <code>0x4A2F</code> dwara Heap shelf meeda unna TV peru \"Rocky\" ga marindi &bull; Rendu remotes ki ippudu Rocky kanipisthundi! Bytecode: <code>aload_0</code> &rarr; <code>invokevirtual</code>."
+    token: "b.withdraw(200);",
+    desc_en: "🔍 <strong>Token Breakdown:</strong> Dereferences debit card handle <code>0x4A2F</code> to reach single shared vault on Heap &bull; Mutates field 'balance' from $1000 to $800. Both cards observe $800! JVMS Bytecode: <code>aload_0</code> &rarr; <code>sipush 200</code> &rarr; <code>invokevirtual #5</code>.",
+    desc_telugish: "🔍 <strong>Token Breakdown:</strong> Debit card <code>0x4A2F</code> dwara Heap vault lo unna balance $1000 nundi $800 ki marindi &bull; Rendu cards ki ippudu $800 kanipisthundi! Bytecode: <code>aload_0</code> &rarr; <code>invokevirtual</code>."
   },
   {
-    token: "d = new Dog(\"Max\", 1);",
-    desc_en: "🔍 <strong>Token Breakdown:</strong> <code>new Dog(\"Max\", 1)</code> buys a second TV at heap address <code>0x7B9C</code> &bull; Reassigns ONLY modify's local remote. main's remote STILL points to Rocky (<code>0x4A2F</code>)! JVMS Bytecode: <code>new #2</code> &rarr; <code>dup</code> &rarr; <code>invokespecial</code> &rarr; <code>astore_0</code>.",
-    desc_telugish: "🔍 <strong>Token Breakdown:</strong> <code>0x7B9C</code> daggara kotha TV konindi &bull; modify local remote ni daaniki marchindi. main remote inka Rocky (<code>0x4A2F</code>) ke point chesthundi! Bytecode: <code>new</code> &rarr; <code>astore_0</code>."
+    token: "b = new BankAccount(\"Bob\", 2000);",
+    desc_en: "🔍 <strong>Token Breakdown:</strong> <code>new BankAccount(...)</code> builds a second vault at heap address <code>0x7B9C</code> &bull; Reassigns ONLY processTransaction's local parameter <code>b</code>. main's <code>account</code> STILL points to Alice's vault ($800 at <code>0x4A2F</code>)! JVMS Bytecode: <code>new #2</code> &rarr; <code>dup</code> &rarr; <code>invokespecial</code> &rarr; <code>astore_0</code>.",
+    desc_telugish: "🔍 <strong>Token Breakdown:</strong> <code>0x7B9C</code> daggara kotha vault kattindi &bull; processTransaction local card ni daaniki marchindi. main card inka Alice vault (<code>0x4A2F</code>) ke point chesthundi! Bytecode: <code>new</code> &rarr; <code>astore_0</code>."
   },
   {
     token: "return (Method Cleanup)",
-    desc_en: "🔍 <strong>Token Breakdown:</strong> <code>modify()</code> frame pops off Call Stack (RSP increments) &bull; Object <code>0x7B9C</code> has 0 active references (orphan) &rarr; Garbage Collector sweeps it safely! JVMS Bytecode: <code>return</code>.",
-    desc_telugish: "🔍 <strong>Token Breakdown:</strong> <code>modify()</code> frame wipe aindi &bull; Object <code>0x7B9C</code> ki remotes levu kabatti Garbage Collector robot sweep chesthundi! Bytecode: <code>return</code>."
+    desc_en: "🔍 <strong>Token Breakdown:</strong> processTransaction returns &bull; Stack frame popped by RSP register &bull; Vault at 0x7B9C has 0 debit cards (0 GC roots) and is swept by the Garbage Collector!",
+    desc_telugish: "🔍 <strong>Token Breakdown:</strong> processTransaction frame destroy ayyindi &bull; 0x7B9C vault ki cards levu kabatti Garbage Collector clean chesindi!"
   }
 ];
 
@@ -2108,6 +2654,199 @@ function escapeHtml(str) {
   if (typeof str !== 'string') return '';
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
+
+// 13. THREE.JS 3D AMBIENT BACKGROUND ENGINE (YouTube / Manim High-End Studio)
+let threeScene, threeCamera, threeRenderer, threeParticles, threeGrid;
+
+function initThreeAmbientScene() {
+  const canvas = document.getElementById('three-ambient-canvas');
+  if (!canvas || typeof THREE === 'undefined') return;
+
+  try {
+    const parent = canvas.parentElement;
+    const width = parent ? parent.clientWidth : window.innerWidth;
+    const height = parent ? parent.clientHeight : window.innerHeight;
+
+    threeScene = new THREE.Scene();
+    threeCamera = new THREE.PerspectiveCamera(50, (width || 1280) / (height || 720), 0.1, 1000);
+    threeCamera.position.set(0, 4, 18);
+    threeCamera.lookAt(0, 0, 0);
+
+    threeRenderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+    threeRenderer.setSize(width || 1280, height || 720);
+    threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+    // Subtle isometric grid
+    threeGrid = new THREE.GridHelper(36, 18, 0x38bdf8, 0x1e293b);
+    threeGrid.position.y = -5;
+    threeGrid.material.opacity = 0.22;
+    threeGrid.material.transparent = true;
+    threeScene.add(threeGrid);
+
+    // Floating ambient memory data particles
+    const particleCount = 60;
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount * 3; i += 3) {
+      positions[i] = (Math.random() - 0.5) * 30;
+      positions[i + 1] = (Math.random() - 0.5) * 16;
+      positions[i + 2] = (Math.random() - 0.5) * 16;
+    }
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const material = new THREE.PointsMaterial({
+      color: 0x38bdf8,
+      size: 0.16,
+      transparent: true,
+      opacity: 0.45
+    });
+    threeParticles = new THREE.Points(geometry, material);
+    threeScene.add(threeParticles);
+
+    let mouseX = 0, mouseY = 0;
+    window.addEventListener('mousemove', (e) => {
+      mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+      mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+    });
+
+    function animateThree() {
+      requestAnimationFrame(animateThree);
+      if (threeParticles) {
+        threeParticles.rotation.y += 0.0006;
+        const pos = threeParticles.geometry.attributes.position.array;
+        for (let i = 1; i < particleCount * 3; i += 3) {
+          pos[i] += 0.012;
+          if (pos[i] > 10) pos[i] = -8;
+        }
+        threeParticles.geometry.attributes.position.needsUpdate = true;
+      }
+      if (threeCamera) {
+        threeCamera.position.x += (mouseX * 1.5 - threeCamera.position.x) * 0.02;
+        threeCamera.position.y += (-mouseY * 1.2 + 4 - threeCamera.position.y) * 0.02;
+        threeCamera.lookAt(0, 0, 0);
+      }
+      threeRenderer.render(threeScene, threeCamera);
+    }
+    animateThree();
+
+    window.addEventListener('resize', () => {
+      if (!canvas || !canvas.parentElement || !threeRenderer || !threeCamera) return;
+      const w = canvas.parentElement.clientWidth;
+      const h = canvas.parentElement.clientHeight;
+      if (w > 0 && h > 0) {
+        threeCamera.aspect = w / h;
+        threeCamera.updateProjectionMatrix();
+        threeRenderer.setSize(w, h);
+      }
+    });
+  } catch (err) {
+    console.warn('[ThreeAmbient] WebGL initialization skipped:', err);
+  }
+}
+window.initThreeAmbientScene = initThreeAmbientScene;
+
+// ==========================================================================
+// VOIDRD DYNAMIC RESEARCHED DOMAIN ENGINE
+// ==========================================================================
+let currentResearchedDomains = [];
+let activeDomainId = 'banking';
+
+async function initDomainPicker() {
+  try {
+    const res = await fetch('/api/lesson/domains');
+    const json = await res.json();
+    if (json.success && json.data) {
+      currentResearchedDomains = json.data;
+      renderDomainOptions();
+    }
+  } catch (err) {
+    console.warn('[VoidRD] Failed to load researched domains:', err);
+  }
+}
+window.initDomainPicker = initDomainPicker;
+
+function renderDomainOptions() {
+  const container = document.getElementById('domain-options-list');
+  if (!container) return;
+  container.innerHTML = currentResearchedDomains.map(d => `
+    <div class="domain-option-item ${d.id === activeDomainId ? 'active-domain' : ''}" onclick="selectDomain('${d.id}')">
+      <div class="domain-option-icon">${d.icon}</div>
+      <div class="domain-option-content">
+        <div class="domain-option-title-row">
+          <span class="domain-option-title">${d.name}</span>
+          <span class="domain-option-badge">${d.badge}</span>
+        </div>
+        <div class="domain-option-tagline">${d.tagline}</div>
+      </div>
+    </div>
+  `).join('');
+}
+window.renderDomainOptions = renderDomainOptions;
+
+function toggleDomainPicker() {
+  const panel = document.getElementById('domain-dropdown-panel');
+  if (!panel) return;
+  const isHidden = panel.style.display === 'none';
+  panel.style.display = isHidden ? 'flex' : 'none';
+}
+window.toggleDomainPicker = toggleDomainPicker;
+
+async function selectDomain(domainId) {
+  activeDomainId = domainId;
+  const panel = document.getElementById('domain-dropdown-panel');
+  if (panel) panel.style.display = 'none';
+
+  const domain = currentResearchedDomains.find(d => d.id === domainId);
+  if (domain) {
+    const iconEl = document.getElementById('active-domain-icon');
+    const nameEl = document.getElementById('active-domain-name');
+    if (iconEl) iconEl.textContent = domain.icon;
+    if (nameEl) nameEl.textContent = domain.name;
+  }
+  renderDomainOptions();
+
+  showApiOverlay(`⚡ VoidRD Dynamic Synthesis: Synthesizing '${domain?.name || domainId}' mental model...`);
+  try {
+    const res = await fetch('/api/lesson/generate-example', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ domain: domainId, topic: 'java-memory' })
+    });
+    const json = await res.json();
+    hideApiOverlay();
+    if (json.success && json.data) {
+      applyDynamicDomainData(json.data);
+    }
+  } catch (err) {
+    hideApiOverlay();
+    console.error('[VoidRD] Domain generation error:', err);
+  }
+}
+window.selectDomain = selectDomain;
+
+function applyDynamicDomainData(data) {
+  const card1Owner = document.querySelector('#card-box-1 .debit-owner-name');
+  const card2Owner = document.querySelector('#card-box-2 .debit-owner-name');
+  const card1Num = document.querySelector('#card-box-1 .debit-card-num');
+  const card2Num = document.querySelector('#card-box-2 .debit-card-num');
+  const vaultTitle = document.querySelector('#bank-vault-box .vault-door-title');
+  const vaultBal = document.getElementById('vault-balance-num');
+  const codeLine = document.getElementById('golden-rule-code');
+  const addrBadges = document.querySelectorAll('.card-address-badge');
+
+  if (card1Owner && data.card1) card1Owner.textContent = data.card1.owner;
+  if (card2Owner && data.card2) card2Owner.textContent = data.card2.owner;
+  if (card1Num) card1Num.textContent = data.address;
+  if (card2Num) card2Num.textContent = data.address;
+  if (vaultTitle && data.vault) vaultTitle.textContent = data.vault.title_en;
+  if (vaultBal && data.vault) vaultBal.textContent = data.vault.stat;
+  if (codeLine) codeLine.textContent = data.codeSnippet;
+  addrBadges.forEach(el => el.textContent = data.address);
+
+  // Trigger laser bus flash to illustrate address alignment
+  if (typeof flashLaserBeam === 'function') setTimeout(flashLaserBeam, 150);
+  window.AudioEngine.playWhoosh();
+}
+window.applyDynamicDomainData = applyDynamicDomainData;
 
 // Auto-boot on DOM ready
 document.addEventListener('DOMContentLoaded', bootPlayerApp);

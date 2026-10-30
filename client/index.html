@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Java Memory Architecture: Stack vs. Heap & Pass-by-Value</title>
+  <title>VoidRD // Spatial Systems Cinema — Java Memory Architecture</title>
   <link rel="stylesheet" href="css/player.css">
 </head>
 <body>
@@ -14,14 +14,18 @@
     <!-- 1. TOP HEADER APP BAR -->
     <header class="player-top-header">
       <div class="brand-left">
-        <span class="brand-badge">JAVA // MASTERCLASS</span>
-        <span class="lesson-title-text" id="lesson-header-title">Java Memory Architecture: Stack vs. Heap & Pass-by-Value</span>
+        <div class="voidrd-logo-pill">
+          <span class="voidrd-origin-mark">[ ∅ ]</span>
+          <span class="voidrd-brand-name">VoidRD</span>
+          <span class="voidrd-tag">SPATIAL CINEMA</span>
+        </div>
+        <span class="lesson-title-text" id="lesson-header-title">Java Memory Architecture: Stack vs. Heap &amp; Pass-by-Value</span>
       </div>
 
       <div class="header-actions">
         <div class="api-status-badge" id="api-status-indicator">
           <span class="api-pulse-dot"></span>
-          <span>API Connected (Port 5000)</span>
+          <span>VoidRD API Active (Port 5000)</span>
         </div>
 
         <select id="voice-select" class="voice-dropdown" onchange="onVoiceSelected(this.value)" title="Choose Instructor Voice">
@@ -53,6 +57,8 @@
     <!-- 2. CENTER THEATER STAGE (16:9 STUDIO BLACKBOARD) -->
     <main class="stage-viewport">
       <div class="blackboard-canvas" id="blackboard-stage">
+        <!-- 3D WebGL Three.js Ambient Particle Grid Canvas -->
+        <canvas id="three-ambient-canvas" class="three-ambient-canvas"></canvas>
 
         <!-- Stage Canvas Header -->
         <div class="canvas-header">
@@ -60,7 +66,7 @@
             <div>
               <div class="canvas-step-badge">
                 <span id="step-indicator-badge">STEP 01 // CORE PRINCIPLES</span>
-                <span style="color:#71717a; font-size:10px;">JNTUH CS305PC &bull; JVMS §2.5</span>
+                <span style="color:#71717a; font-size:10px;">VoidRD &bull; JLS §4.12 &bull; JVMS §2.5</span>
               </div>
               <div style="display:flex; align-items:center;">
                 <h1 class="canvas-step-title" id="step-title-live">Where Does Your Code Actually Live?</h1>
@@ -68,19 +74,40 @@
               </div>
             </div>
 
-            <!-- Dual-View Toggle: Metaphor vs Exact RAM Reality -->
-            <div class="view-mode-toggle" id="view-mode-toggle">
-              <button class="btn-view-mode active-view" id="view-btn-metaphor" onclick="switchVisualView('metaphor')" title="Intuitive Everyday Physical Model">
-                <span>💡</span>
-                <span>Metaphor View</span>
-              </button>
-              <button class="btn-view-mode" id="view-btn-ram" onclick="switchVisualView('ram')" title="Real Computer RAM Structure">
-                <span>⚡</span>
-                <span>Physical RAM View</span>
-              </button>
+            <!-- Controls: Dynamic Researched Domain Switcher + Dual View Mode -->
+            <div style="display:flex; gap:8px; align-items:center;">
+              <!-- Dynamic Researched Domain Picker (On-Demand AI Models) -->
+              <div class="domain-picker-wrap">
+                <button class="btn-domain-toggle" id="btn-domain-toggle" onclick="toggleDomainPicker()" title="Switch Researched Mental Model Domain on Demand">
+                  <span id="active-domain-icon">🏦</span>
+                  <span id="active-domain-name">Fintech Banking</span>
+                  <span style="font-size:9px; opacity:0.6;">▼</span>
+                </button>
+                <div class="domain-dropdown-panel" id="domain-dropdown-panel" style="display:none;">
+                  <div class="domain-dropdown-header">
+                    <span>SELECT RESEARCHED DOMAIN</span>
+                    <span style="font-size:9px; color:var(--accent-blue);">ON-DEMAND AI</span>
+                  </div>
+                  <div id="domain-options-list">
+                    <!-- Populated dynamically via /api/lesson/domains -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Dual-View Toggle: Metaphor vs Exact RAM Reality -->
+              <div class="view-mode-toggle" id="view-mode-toggle">
+                <button class="btn-view-mode active-view" id="view-btn-metaphor" onclick="switchVisualView('metaphor')" title="Intuitive Everyday Physical Model">
+                  <span>💡</span>
+                  <span>Metaphor View</span>
+                </button>
+                <button class="btn-view-mode" id="view-btn-ram" onclick="switchVisualView('ram')" title="Real Computer RAM Structure">
+                  <span>⚡</span>
+                  <span>Physical RAM View</span>
+                </button>
+              </div>
             </div>
           </div>
-          <p class="canvas-step-desc" id="step-desc-live">Whenever you write Java code, your computer divides memory into two distinct rooms: Room 1 (The Stack Desk) and Room 2 (The Heap Warehouse).</p>
+          <p class="canvas-step-desc" id="step-desc-live">Whenever you execute Java code, the JVM divides memory into two distinct realms: Room 1 (The Stack Desk for local cards &amp; primitives) and Room 2 (The Heap Central Bank Vault for object instances).</p>
         </div>
 
         <!-- Stage Body Mount (Where Visual Manipulatives Render) -->
@@ -185,7 +212,7 @@
     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #27272a; padding-bottom:12px; margin-bottom:12px;">
       <div style="display:flex; align-items:center; gap:8px;">
         <span style="font-size:16px;">📝</span>
-        <span style="font-weight:800; color:#ffffff; font-size:13px; letter-spacing:0.3px;">STUDENT MASTERCLASS NOTES</span>
+        <span style="font-weight:800; color:#ffffff; font-size:13px; letter-spacing:0.3px;">VOIDRD // SPATIAL ARCHITECTURE NOTES</span>
       </div>
       <button onclick="toggleNotesDrawer()" style="background:transparent; border:none; color:#a1a1aa; font-size:16px; cursor:pointer;" title="Close [N]">✕</button>
     </div>
@@ -204,45 +231,45 @@
     <div id="notes-content-revision" style="flex:1; overflow-y:auto; font-size:12px; line-height:1.6; color:#cbd5e1; padding-right:4px;">
       <div class="notes-callout-card">
         <strong>🌟 The 3 Golden Laws to Never Forget:</strong><br>
-        1. <strong>Stack (The Desk):</strong> Holds local numbers & remote handles. Super fast (0.001ms), cleaned up automatically when method finishes.<br>
-        2. <strong>Heap (The Warehouse):</strong> Holds all objects created with <code>new</code>. Managed by the Garbage Collector robot.<br>
-        3. <strong>Variables are TV Remotes:</strong> <code>Dog d2 = dog;</code> does NOT buy a second TV! It creates a second remote tuned to the SAME television (Aliasing)!
+        1. <strong>Stack (The Study Desk):</strong> Holds local numbers &amp; debit card handles (<code>int deposit = 500</code>, <code>account = 0x4A2F</code>). Ultra-fast (0.001ms via CPU RSP register), automatically cleaned up when the method finishes.<br>
+        2. <strong>Heap (The Central Bank Vault):</strong> Holds all objects created with <code>new BankAccount(...)</code>. Stored on 16-byte aligned shelves, protected and reclaimed by the JVM Garbage Collector robot.<br>
+        3. <strong>Variables are Debit Cards:</strong> <code>BankAccount jointCard = account;</code> does NOT build a second vault! It creates a second debit card programmed with the SAME vault address (<code>0x4A2F</code>) (Aliasing)!
       </div>
 
-      <div class="notes-section-title">📊 Stack vs. Heap Comparison</div>
+      <div class="notes-section-title">📊 Stack vs. Heap Memory Comparison</div>
       <table class="notes-cheatsheet-table">
         <thead>
           <tr>
             <th>Property</th>
-            <th>Stack Memory</th>
-            <th>Heap Memory</th>
+            <th>Stack Memory (JVMS §2.6)</th>
+            <th>Heap Memory (JVMS §2.5.3)</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td><strong>Analogy</strong></td>
-            <td>Personal Study Desk</td>
-            <td>Shared Warehouse</td>
+            <td><strong>Mental Model</strong></td>
+            <td>Personal Study Desk Trays</td>
+            <td>Central High-Security Vault</td>
           </tr>
           <tr>
             <td><strong>Speed</strong></td>
-            <td>Ultra-Fast (~0.001ms)</td>
-            <td>Slower (Dynamic Pointers)</td>
+            <td>Blazing (~0.001ms via CPU RSP)</td>
+            <td>Dynamic Pointer Indirection</td>
           </tr>
           <tr>
             <td><strong>What it Holds</strong></td>
-            <td>Primitives & Remote Handles</td>
-            <td>Object Instances & Arrays</td>
+            <td>Local Primitives &amp; 4-byte Reference Cards</td>
+            <td>Object Instances &amp; Arrays (Payloads)</td>
           </tr>
           <tr>
             <td><strong>Lifecycle</strong></td>
-            <td>Method Scope (LIFO)</td>
-            <td>Alive while referenced</td>
+            <td>Strict Method Scope (LIFO Frame)</td>
+            <td>Alive while reachable from any GC Root</td>
           </tr>
           <tr>
-            <td><strong>Managed By</strong></td>
-            <td>CPU Stack Pointer (RSP)</td>
-            <td>Garbage Collector (GC)</td>
+            <td><strong>Management</strong></td>
+            <td>Hardware Stack Pointer (RSP)</td>
+            <td>Tracing Garbage Collector (G1 / ZGC)</td>
           </tr>
           <tr>
             <td><strong>Crash Error</strong></td>
@@ -252,46 +279,62 @@
         </tbody>
       </table>
 
-      <div class="notes-section-title">🔑 Pass-by-Value in One Sentence</div>
+      <div class="notes-section-title">🔑 Strict Pass-by-Value in One Sentence (JLS §8.4.1)</div>
       <p style="background:#09090b; padding:8px 12px; border-radius:6px; border:1px solid #27272a;">
-        Java ALWAYS passes by value. Passing an object copies the <strong>remote control frequency</strong> (e.g. <code>0x4A2F</code>), NEVER the physical television!
+        Java <strong>ALWAYS</strong> passes by value. Passing an object copies the <strong>4-byte debit card address chip</strong> (e.g. <code>0x4A2F</code>), NEVER the physical central bank vault! Reassigning the card inside a method only buys a card for the helper method; caller variables remain untouched.
       </p>
     </div>
 
-    <!-- TAB 2: DETAILED ARCHITECTURE & INTERVIEW GUIDE -->
+    <!-- TAB 2: 4-TIER RESEARCH & MASTER ARCHITECTURE GUIDE -->
     <div id="notes-content-detailed" style="flex:1; overflow-y:auto; font-size:12px; line-height:1.6; color:#cbd5e1; display:none; padding-right:4px;">
-      <div class="notes-section-title">🏛️ 1. JVM Specification Architecture (JVMS §2.5)</div>
-      <p>Inside the Java Virtual Machine, physical RAM is segmented into two categories:</p>
-      <ul style="margin-left:18px; margin-top:4px;">
-        <li><strong>Thread-Private (Stack):</strong> Each executing thread has its own private JVM Stack. Contains method execution frames. Threads can NEVER read another thread's stack trays!</li>
-        <li><strong>Thread-Shared (Heap):</strong> Single universal memory pool shared across all threads. Synchronized access is required when multiple threads write to the same object.</li>
-      </ul>
-
-      <div class="notes-section-title">📦 2. Anatomical Breakdown of a Stack Frame</div>
-      <p>Every time a Java method is called, an exact frame is allocated containing:</p>
-      <ol style="margin-left:18px; margin-top:4px;">
-        <li><strong>Local Variable Array:</strong> Slot 0 = <code>this</code> (for instance methods), Slot 1+ = method parameters, followed by local variables.</li>
-        <li><strong>Operand Stack:</strong> The LIFO workspace where JVM bytecode instructions (e.g. <code>iload</code>, <code>iadd</code>) perform arithmetic.</li>
-        <li><strong>Frame Data:</strong> Reference to the runtime constant pool and method return address.</li>
-      </ol>
-
-      <div class="notes-section-title">🎯 3. The 4 Classic Interview Questions</div>
-      <div style="background:#09090b; border:1px solid #27272a; border-radius:6px; padding:10px 12px; margin-top:6px;">
-        <strong style="color:var(--accent-blue);">Q1: Is Java ever Pass-by-Reference?</strong><br>
-        <span style="color:#fafafa;">NO. 100% strictly Pass-by-Value.</span> For objects, the "value" is the memory address stored in the variable.
+      
+      <!-- Tier 1: Official Documentation -->
+      <div class="notes-section-title" style="color:var(--accent-blue);">🏛️ TIER 1: OFFICIAL SPECIFICATIONS (JVMS &amp; JLS)</div>
+      <div style="background:#09090b; border:1px solid #27272a; border-radius:6px; padding:10px 12px; margin-bottom:10px;">
+        <p><strong>1. JLS §4.12.1 (Variables of Primitive Type):</strong> A primitive variable always holds a raw value of that exact primitive type directly in its memory slot, never a reference or pointer. For <code>int</code>, this is a 32-bit signed two's-complement integer.</p>
+        <p><strong>2. JLS §4.12.2 (Variables of Reference Type):</strong> A reference variable always holds either <code>null</code> or a reference to an object. It <em>never</em> holds the object itself!</p>
+        <p><strong>3. JLS §4.12.3 (Kinds of Variables):</strong> Local variables (declared in methods) are stored in the JVM Stack Frame. Instance variables (fields declared in classes) reside inside the object on the Heap.</p>
+        <p><strong>4. JVMS §2.6.1 (Local Variable Array):</strong> A method's local variables reside in its private stack frame. Controlled by the CPU RSP hardware register with zero GC overhead.</p>
+        <p><strong>5. JVMS §2.5.3 (Heap Storage Pool):</strong> All object instances and arrays are allocated on the shared heap, managed by automatic Garbage Collection.</p>
+        <p><strong>6. JLS §8.4.1 (Formal Parameters - Pass-By-Value):</strong> Java is <strong>strictly Pass-by-Value</strong> without exception. An argument's value is evaluated and copied into the parameter slot. For primitives, raw bits are copied; for objects, the 32-bit memory address is copied.</p>
+        <p><strong>7. HotSpot 64-bit Object Header:</strong> 8-byte Mark Word (HashCode, GC Age, Locks) + 4-byte Compressed Klass Word (pointing to Metaspace) + fields + 8-byte boundary alignment padding.</p>
       </div>
 
-      <div style="background:#09090b; border:1px solid #27272a; border-radius:6px; padding:10px 12px; margin-top:8px;">
-        <strong style="color:var(--accent-emerald);">Q2: What happens if you reassign a parameter inside a method?</strong><br>
-        <code>void test(Dog d) { d = new Dog(); }</code><br>
-        <span style="color:#fafafa;">The caller's remote is unaffected!</span> You only pointed the helper method's local copy of the remote to a new TV.
+      <!-- Tier 2: How It Is Explained on the Internet -->
+      <div class="notes-section-title" style="color:#a78bfa;">🌐 TIER 2: INDUSTRY &amp; INTERNET ANALYSIS</div>
+      <div style="background:#09090b; border:1px solid #27272a; border-radius:6px; padding:10px 12px; margin-bottom:10px;">
+        <p><strong>Common Internet Misconception:</strong> <em>"All primitives go to the Stack; all objects go to the Heap."</em></p>
+        <p><strong>The Correction (Cay Horstmann - Core Java &amp; Project Valhalla):</strong> Declaration context, not data type, determines physical storage location! A <em>local primitive</em> (<code>int deposit = 500</code>) lives in the stack frame. But an <em>instance primitive field</em> (<code>class BankAccount { int balance = 1000; }</code>) lives physically on the <strong>Heap</strong> inside the BankAccount object's instance payload at byte offset 12!</p>
+        <p><strong>MIT 6.005 / 6.102 (Software Construction by Rob Miller):</strong> Snapshot diagrams model variables as named slots on the stack pointing via arrows (addresses) to mutable object bubbles on the heap. Multiple slots pointing to the same bubble is <em>Aliasing</em>.</p>
+        <p><strong>Joshua Bloch (Effective Java Item 50):</strong> Defend against accidental aliasing through immutable structures or defensive copies.</p>
+        <p><strong>JIT Escape Analysis &amp; Scalar Replacement:</strong> If an object does not escape a method, the HotSpot C2 JIT compiler eliminates heap allocation and places primitive fields directly in CPU registers or stack slots.</p>
       </div>
 
-      <div style="background:#09090b; border:1px solid #27272a; border-radius:6px; padding:10px 12px; margin-top:8px;">
-        <strong style="color:var(--accent-amber);">Q3: How do you trigger StackOverflowError vs OutOfMemoryError?</strong><br>
-        • Infinite recursion with no base case &rarr; Stack fills up trays &rarr; <code>StackOverflowError</code>.<br>
-        • Creating millions of objects in a loop saved in a list &rarr; Heap fills shelves &rarr; <code>OutOfMemoryError</code>.
+      <!-- Tier 3: Master Teacher Synthesis -->
+      <div class="notes-section-title" style="color:var(--accent-emerald);">🧠 TIER 3: 20+ YR MASTER TEACHER SYNTHESIS</div>
+      <div style="background:#09090b; border:1px solid #27272a; border-radius:6px; padding:10px 12px; margin-bottom:10px;">
+        <p><strong>The 3 JVM Worlds of Java:</strong> In <code>BankAccount account = new BankAccount("Alice", 1000);</code>:</p>
+        <ul style="margin-left:18px; margin-top:4px;">
+          <li><strong style="color:var(--accent-blue);">BankAccount (Capital 'B'):</strong> Metaspace Class Blueprint (JVMS §2.5.4). Factory schematics, bytecode methods (<code>deposit()</code>, <code>withdraw()</code>) in native RAM. You cannot swipe a blueprint at an ATM!</li>
+          <li><strong style="color:#818cf8;">account (Lowercase 'a'):</strong> Stack Debit Card (JVMS §2.6.1). 4-byte address slot holding <code>0x4A2F</code>. Cleared in 0.001ms when method returns.</li>
+          <li><strong style="color:var(--accent-emerald);">new BankAccount("Alice", 1000):</strong> Living Central Bank Vault on Heap (JVMS §2.5.3). 16-byte memory block (8B Mark Word + 4B Klass Word + 4B balance field).</li>
+        </ul>
+        <p style="margin-top:6px;"><strong>The Definitive Truth on Variables:</strong> <code>main</code>'s local variable <code>int deposit = 500</code> on the Stack is 100% physically isolated from the BankAccount object's field <code>int balance = 1000</code> on the Heap. Calling <code>processTransaction(account, deposit)</code> passes copies of the debit card handle and deposit number. Modifying the local parameter never touches caller variables.</p>
       </div>
+
+      <!-- Tier 4: Motion Graphics & Visual Effects Explainer -->
+      <div class="notes-section-title" style="color:var(--accent-amber);">🎬 TIER 4: MOTION GRAPHICS &amp; VISUAL EFFECTS ARCHITECTURE</div>
+      <div style="background:#09090b; border:1px solid #27272a; border-radius:6px; padding:10px 12px;">
+        <p><strong>How the Engine Renders YouTube-Caliber Interactive Motion:</strong></p>
+        <ul style="margin-left:18px; margin-top:4px;">
+          <li><strong>Three.js WebGL 3D Ambient Perspective Grid:</strong> 3D coordinate space with 60 drifting floating RAM memory particles responsive to mouse parallax.</li>
+          <li><strong>Anime.js Spring Physics:</strong> Realistic mass damping <code>spring(1, 80, 12, 0)</code> when debit cards slide into view.</li>
+          <li><strong>Rotating Vault Dial &amp; Odometer Rollover:</strong> Dial rotates 360° on transactions; LED digital display animates smooth balance rollover numbers.</li>
+          <li><strong>Curved Laser Data Bus with Traveling Photons:</strong> Animated Cubic Bezier SVG connection between Stack debit card and Heap vault with glowing traveling photon pulses.</li>
+          <li><strong>Strict-Scope Word Highlighting:</strong> Screen chalkboard text highlights in real-time lockstep with subtitle audio narration, strictly isolated to active card containers.</li>
+        </ul>
+      </div>
+
     </div>
 
     <!-- Drawer Footer Actions -->
@@ -336,10 +379,10 @@
 
     <!-- 4 Tabs Switcher -->
     <div class="concept-tabs-row" id="cmodal-tabs-row">
-      <button class="btn-ctab ctab-active" id="ctab-btn-analogy" onclick="switchConceptTab('analogy')">💡 Everyday Analogy</button>
-      <button class="btn-ctab" id="ctab-btn-spec" onclick="switchConceptTab('spec')">🏛️ Official Spec (JLS/JVMS)</button>
-      <button class="btn-ctab" id="ctab-btn-minilab" onclick="switchConceptTab('minilab')">🚀 Interactive Mini-Lab</button>
-      <button class="btn-ctab" id="ctab-btn-pathway" onclick="switchConceptTab('pathway')">🗺️ Interview & Learning Path</button>
+      <button class="btn-ctab ctab-active" id="ctab-btn-analogy" onclick="switchConceptTab('analogy')">💡 Core Mental Model</button>
+      <button class="btn-ctab" id="ctab-btn-spec" onclick="switchConceptTab('spec')">🔬 JVM Reality &amp; Specs</button>
+      <button class="btn-ctab" id="ctab-btn-minilab" onclick="switchConceptTab('minilab')">⚠️ The Classic Interview Trap</button>
+      <button class="btn-ctab" id="ctab-btn-pathway" onclick="switchConceptTab('pathway')">🧪 Interactive Memory Sandbox</button>
     </div>
 
     <!-- 4 Tab Content Panels -->
@@ -384,6 +427,10 @@
       }
     }
   </script>
+
+  <!-- 3D Interactive Graphics & Motion Graphics Engines (Three.js & Anime.js v3) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
 
   <!-- Modular Client Player Scripts -->
   <script src="js/api.js"></script>

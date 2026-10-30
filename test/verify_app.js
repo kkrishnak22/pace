@@ -31,7 +31,7 @@ const files = [
   'client/js/typewriter.js',
   'client/js/audio.js',
   'client/js/app.js',
-  '.agents/skills/visual-lesson-engine/SKILL.md'
+  'package.json'
 ];
 
 files.forEach(f => {
@@ -124,6 +124,35 @@ assert(html.includes('id="ctab-btn-analogy"'), 'HTML has Tab 1: Everyday Analogy
 assert(html.includes('id="ctab-btn-spec"'), 'HTML has Tab 2: Official Spec (JLS/JVMS)');
 assert(html.includes('id="ctab-btn-minilab"'), 'HTML has Tab 3: Interactive Mini-Lab');
 assert(html.includes('id="ctab-btn-pathway"'), 'HTML has Tab 4: Interview & Learning Path');
+
+// 8. VoidRD Branding & Spatial Identity Audit
+console.log('\n--- 8. VoidRD Branding & Spatial Identity ---');
+const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../package.json'), 'utf8'));
+assert(pkg.name === 'voidrd-engine', 'package.json rebranded to voidrd-engine');
+assert(pkg.author === 'VoidRD Systems', 'package.json author set to VoidRD Systems');
+assert(html.includes('VoidRD'), 'HTML contains VoidRD brand title & badges');
+assert(html.includes('[ ∅ ]'), 'HTML contains VoidRD Spatial Origin Mark [ ∅ ]');
+
+// 9. Researched Dynamic Domain Models Audit
+console.log('\n--- 9. Researched Dynamic Domain Models ---');
+const { getResearchedDomains, generateDomainExample } = require('../server/stepGenerator');
+const domains = getResearchedDomains();
+assert(Array.isArray(domains) && domains.length >= 4, 'API provides at least 4 researched domains');
+assert(domains.some(d => d.id === 'banking'), 'Includes Fintech Banking domain');
+assert(domains.some(d => d.id === 'ecommerce'), 'Includes Cloud E-Commerce domain');
+assert(domains.some(d => d.id === 'gaming'), 'Includes Game Engine Systems domain');
+assert(domains.some(d => d.id === 'telecom'), 'Includes Telecom & IoT Networks domain');
+
+const exEcom = generateDomainExample('ecommerce');
+assert(exEcom && exEcom.className === 'ShoppingCart', 'Dynamic synthesis generates ShoppingCart for ecommerce');
+assert(exEcom && exEcom.address === '0x8F1A', 'Dynamic synthesis assigns 0x8F1A address for ecommerce');
+
+const exGame = generateDomainExample('gaming');
+assert(exGame && exGame.className === 'PlayerEntity', 'Dynamic synthesis generates PlayerEntity for gaming');
+
+assert(html.includes('id="domain-options-list"'), 'HTML contains #domain-options-list for on-demand domain selection');
+assert(appJs.includes('initDomainPicker'), 'app.js defines initDomainPicker for loading dynamic domains');
+assert(appJs.includes('selectDomain'), 'app.js defines selectDomain for on-demand dynamic example synthesis');
 
 console.log(`\n==========================================`);
 console.log(`TOTAL PASSING: ${pass}`);
