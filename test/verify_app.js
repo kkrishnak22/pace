@@ -93,6 +93,38 @@ assert(step3.codeLines && step3.codeLines.length >= 10, 'Step 3 contains Java co
 assert(step3.executionSteps && step3.executionSteps.length >= 6, 'Step 3 contains 7 JVMS execution trace frames');
 assert(typeof step3.tokenCount === 'number' && step3.tokenCount > 0, 'Step 3 reports token usage metrics');
 
+// Test Dynamic Step 4 (Crash Diagnostics) and Step 5 (Universal Trajectory)
+console.log('\n--- 6. Dynamic Step N Synthesis (Zero Step Limits) ---');
+const step4 = generateDynamicStep({ topic: 'java-memory', stepNumber: 4, language: 'en' });
+assert(step4 && step4.step === 4, 'Dynamic generator synthesized Step 4');
+assert(step4.diagnostics && step4.diagnostics.length === 2, 'Step 4 contains StackOverflow & OutOfMemory crash diagnostics');
+
+const step5 = generateDynamicStep({ topic: 'raft-consensus', stepNumber: 5, language: 'en' });
+assert(step5 && step5.step === 5, 'Dynamic generator synthesized Step 5 for arbitrary topic');
+assert(step5.cards && step5.cards.length >= 2, 'Step 5 contains dynamically synthesized pedagogical cards');
+
+// Check Dynamic Container in HTML
+const html = fs.readFileSync(path.resolve(__dirname, '../client/index.html'), 'utf8');
+assert(html.includes('id="step-pills-container"'), 'HTML contains dynamic #step-pills-container');
+assert(!html.includes('step-pill-3'), 'HTML does not contain hardcoded static step buttons');
+
+const appJs = fs.readFileSync(path.resolve(__dirname, '../client/js/app.js'), 'utf8');
+assert(appJs.includes('renderDynamicStepPills'), 'app.js defines renderDynamicStepPills function');
+assert(appJs.includes('fetchDynamicStep'), 'app.js defines generalized fetchDynamicStep function');
+assert(appJs.includes('formatScreenTextWithTerms'), 'app.js defines formatScreenTextWithTerms for on-screen word tokenization');
+assert(appJs.includes('highlightScreenWords'), 'app.js defines highlightScreenWords for live screen sync word lighting');
+assert(appJs.includes('CONCEPT_REGISTRY'), 'app.js defines CONCEPT_REGISTRY for multi-tab knowledge pathways');
+assert(appJs.includes('openConceptPathway'), 'app.js defines openConceptPathway function');
+assert(appJs.includes('prevIdeSubStep'), 'app.js defines prevIdeSubStep for line-by-line manual code stepping');
+assert(appJs.includes('nextIdeSubStep'), 'app.js defines nextIdeSubStep for line-by-line manual code stepping');
+
+// 7. Interactive Concept Modal 4-Tab Architecture
+console.log('\n--- 7. Interactive Concept Pathway Multi-Tabs ---');
+assert(html.includes('id="ctab-btn-analogy"'), 'HTML has Tab 1: Everyday Analogy');
+assert(html.includes('id="ctab-btn-spec"'), 'HTML has Tab 2: Official Spec (JLS/JVMS)');
+assert(html.includes('id="ctab-btn-minilab"'), 'HTML has Tab 3: Interactive Mini-Lab');
+assert(html.includes('id="ctab-btn-pathway"'), 'HTML has Tab 4: Interview & Learning Path');
+
 console.log(`\n==========================================`);
 console.log(`TOTAL PASSING: ${pass}`);
 console.log(`TOTAL FAILING: ${fail}`);

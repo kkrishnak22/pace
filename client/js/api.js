@@ -27,16 +27,16 @@ const LessonAPI = {
     }
   },
 
-  async generateStep(stepNumber, language = 'en') {
+  async generateStep(stepNumber, language = 'en', topic = 'java-memory') {
     try {
-      console.log(`[LessonAPI] POST /api/lesson/generate-step for Step ${stepNumber}...`);
+      console.log(`[LessonAPI] POST /api/lesson/generate-step for Step ${stepNumber} (topic: ${topic})...`);
       const res = await fetch(`${API_BASE}/api/lesson/generate-step`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          topic: 'java-memory',
+          topic: topic,
           stepNumber: stepNumber,
           language: language
         })

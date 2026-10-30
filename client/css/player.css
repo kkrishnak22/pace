@@ -962,14 +962,14 @@ html, body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%) scale(0.92);
-  width: 90%;
-  max-width: 520px;
+  width: 94%;
+  max-width: 720px;
   background: #141418;
   border: 1px solid var(--accent-blue);
   border-radius: 12px;
-  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.9);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.95);
   z-index: 1200;
-  padding: 22px 24px;
+  padding: 20px 24px;
   display: none;
   opacity: 0;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1149,4 +1149,295 @@ html, body {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+/* ==========================================================================
+   INTERACTIVE CONCEPT TERMS (UNDERSCORES & MULTI-TAB PATHWAY POPUPS)
+   ========================================================================== */
+.concept-term {
+  display: inline;
+  position: relative;
+  cursor: pointer;
+  font-weight: 700;
+  border-bottom: 2px dashed rgba(56, 189, 248, 0.7);
+  padding: 0 2px 1px 2px;
+  border-radius: 3px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #ffffff;
+}
+
+.concept-term:hover {
+  background: rgba(56, 189, 248, 0.2);
+  border-bottom-style: solid;
+  border-bottom-color: var(--accent-blue);
+  color: var(--accent-blue);
+}
+
+.concept-term.term-var {
+  border-bottom-color: rgba(56, 189, 248, 0.85);
+  color: #7dd3fc;
+}
+
+.concept-term.term-obj {
+  border-bottom-color: rgba(52, 211, 153, 0.85);
+  color: #6ee7b7;
+}
+
+.concept-term.term-keyword {
+  border-bottom-color: rgba(251, 191, 36, 0.85);
+  color: #fde047;
+}
+
+.concept-term.term-mem {
+  border-bottom-color: rgba(129, 140, 248, 0.85);
+  color: #a5b4fc;
+}
+
+.concept-term.term-error {
+  border-bottom-color: rgba(244, 63, 94, 0.85);
+  color: #fda4af;
+}
+
+/* Synchronous Kinetic Word Highlighting on Screen */
+.screen-word {
+  display: inline;
+  transition: all 0.15s ease;
+  border-radius: 3px;
+  padding: 0 2px;
+}
+
+.screen-word.word-spoken {
+  color: #ffffff;
+}
+
+.screen-word.word-active {
+  background: rgba(56, 189, 248, 0.4) !important;
+  color: #ffffff !important;
+  font-weight: 800;
+  border-bottom: 2px solid var(--accent-blue);
+  transform: scale(1.05);
+}
+
+/* 4-Tab Concept Knowledge Pathway Modal */
+.concept-tabs-row {
+  display: flex;
+  background: #18181b;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.btn-ctab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #a1a1aa;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: center;
+  font-family: var(--font-sans);
+}
+
+.btn-ctab:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.btn-ctab.ctab-active {
+  background: var(--accent-blue);
+  color: #09090b;
+  font-weight: 800;
+}
+
+.ctab-pane {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #cbd5e1;
+}
+
+.cmodal-section {
+  background: #09090b;
+  border: 1px solid #27272a;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+}
+
+.cmodal-section-title {
+  font-size: 11px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--accent-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-cmodal-done {
+  background: var(--accent-blue);
+  color: #09090b;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 5px;
+  font-weight: 800;
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.btn-cmodal-done:hover {
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   RESPONSIVENESS & FLUID THEATER SCALING ACROSS ALL RESOLUTIONS
+   ========================================================================== */
+
+@media (max-height: 850px) {
+  .player-top-header {
+    height: 46px;
+    padding: 0 16px;
+  }
+  .blackboard-canvas {
+    max-height: calc(100vh - 124px);
+    padding: 14px 18px;
+  }
+  .canvas-header {
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+  }
+  .canvas-step-title {
+    font-size: 1.22rem;
+    min-height: 28px;
+  }
+  .canvas-step-desc {
+    font-size: 11.5px;
+    min-height: 18px;
+  }
+  .room-card {
+    padding: 12px 14px;
+  }
+  .room-title {
+    font-size: 1.05rem;
+    margin-bottom: 4px;
+  }
+  .room-desc {
+    font-size: 11.5px;
+    min-height: 38px;
+  }
+  .puzzle-box {
+    padding: 8px 10px;
+    margin-top: 6px;
+  }
+  .player-bottom-console {
+    padding: 6px 16px 8px 16px;
+    gap: 6px;
+  }
+  .draggable-subtitles-card {
+    bottom: 12px;
+    padding: 6px 10px;
+  }
+  .sub-body {
+    font-size: 12px;
+    min-height: 20px;
+  }
+}
+
+@media (max-height: 720px) {
+  .player-top-header {
+    height: 42px;
+  }
+  .blackboard-canvas {
+    max-height: calc(100vh - 108px);
+    padding: 10px 14px;
+  }
+  .canvas-step-title {
+    font-size: 1.1rem;
+    min-height: 22px;
+  }
+  .canvas-step-desc {
+    font-size: 11px;
+    margin-top: 2px;
+  }
+  .room-card {
+    padding: 8px 10px;
+  }
+  .room-title {
+    font-size: 0.95rem;
+  }
+  .room-desc {
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .puzzle-box {
+    padding: 6px 8px;
+  }
+  .btn-ctrl {
+    width: 28px;
+    height: 28px;
+  }
+  .btn-play-pause {
+    width: 32px;
+    height: 32px;
+  }
+  .player-bottom-console {
+    padding: 4px 12px 6px 12px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .lesson-title-text {
+    max-width: 240px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .step-pills-row {
+    overflow-x: auto;
+    max-width: 380px;
+    scrollbar-width: none;
+  }
+  .step-pills-row::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .stage-viewport {
+    padding: 6px 10px;
+  }
+  .blackboard-canvas {
+    aspect-ratio: auto;
+    height: 100%;
+    max-height: calc(100vh - 116px);
+    padding: 12px;
+  }
+  .canvas-body {
+    overflow-y: auto;
+  }
+  .step1-grid, .step2-sandbox, .step3-ide-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .transport-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .transport-center {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+  .step-pills-row {
+    max-width: 100%;
+  }
+  .draggable-subtitles-card {
+    width: 95%;
+  }
 }

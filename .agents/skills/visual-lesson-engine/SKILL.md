@@ -1,129 +1,165 @@
 ---
 name: visual-lesson-engine
 description: >-
-  Interactive Visual Lesson Player and Dynamic Generation Engine designed for university lecture halls,
-  smartboards, and self-paced mastery. Features a client-server architecture with a fixed-viewport (non-scrollable)
-  studio video player, dynamic on-demand API step generation (backend), clean matte black blackboard aesthetic,
-  live letter-by-letter streaming, everywhere-hover HUD tooltips, interactive manipulatives, and dual-language support.
+  Universal Interactive Visual Lesson Player and Dynamic API Generation Engine designed for
+  university lecture halls, smartboards, and self-paced mastery across ANY computer science or
+  engineering topic. Features a client-server architecture with a fixed-viewport (non-scrollable)
+  16:9 blackboard studio player, dynamic on-demand API step generation (backend), clean matte blackboard
+  aesthetic, event-driven speech-visual lockstep, Dual-View (Metaphor vs Physical Reality), everywhere-hover
+  HUD tooltips, interactive physical manipulatives, and dual-language support.
 ---
 
-# Visual Lesson Engine: Full-Stack Architecture & Pedagogical Standards
+# Visual Lesson Engine: Universal Educational Platform & Authoring Standard
 
-The **Visual Lesson Engine** is a full-stack educational platform and authoring standard for delivering interactive, animated, video-player-grade computer science masterclasses. It embodies the mind of a **50-Year Master Teacher & Chief Solution Architect**: Combining the physical geometric intuition of **3Blue1Brown**, the theatrical stagecraft and physical manipulatives of **David Malan (CS50)**, the rapid visual cadence of **Fireship**, and the culturally relatable vernacular of **Hyderabad B.Tech engineering students**.
+The **Visual Lesson Engine** is a **topic-agnostic, full-stack educational engine and pedagogical standard** designed to teach **any complex computer science, engineering, or software architecture concept**.
 
-- **Frontend:** A fixed-viewport, **non-scrollable** video player (`100vw x 100vh`, `overflow: hidden`) featuring an interactive 16:9 blackboard theater stage, live letter-by-letter typewriter streaming, interactive manipulatives, and pro-player transport controls.
-- **Backend:** A REST API engine serving lesson manifests, foundational steps (Step 1, Step 2), and dynamically generating advanced steps (Step 3+) on demand via `/api/lesson/generate-step` to optimize token consumption and maintain dynamic pedagogical precision.
+It embodies the synthesized mindset of a **50-Year Master Teacher & Chief Solution Architect**:
+* The physical visual intuition of **3Blue1Brown** (spatial geometry, state transitions).
+* The physical props and stagecraft of **David Malan / CS50** (everyday manipulatives: remotes, shelves, trays, envelopes).
+* The fast, high-density, crystal-clear pacing of **Fireship** (zero fluff, immediate mental models).
+* The cultural clarity and accessibility of **bilingual instruction** (Simple English + Romanized Telugish).
+
+> **Important:** While our flagship reference implementation demonstrates *Java Memory Architecture (Stack vs. Heap)*, this engine is designed to author and deliver **ANY** technical curriculum: Concurrency & Deadlocks, SQL Indexing & B-Trees, Git Internal Object Graphs, Networking & TCP Handshakes, CPU Caching & Pipelining, Garbage Collection, Docker Containers, or OS Virtual Memory.
 
 ---
 
-## 1. System Architecture: Client Player + Dynamic API Backend
+## 1. System Architecture: Topic-Agnostic Client + REST API Engine
 
 ```
-+---------------------------------------------------------------------------------+
-|                       VISUAL LESSON ENGINE SYSTEM TOPOLOGY                      |
-+---------------------------------------------------------------------------------+
-|                                                                                 |
-|  [ CLIENT: Fixed Theater Video Player ] <-------- HTTP / JSON API --------->   |
-|   - Fixed viewport (100vw x 100vh, zero page scroll)                           |
-|   - 16:9 Studio Blackboard Stage Canvas                                         |
-|   - Live letter-by-letter screen typewriter                                     |
-|   - Interactive manipulatives (TV Remote & Smart TV, JVMS Call Stack & Heap)    |
-|   - Draggable PIP captions & audio synthesizer                                  |
-|   - Scrubber timeline, step track pills, Continuous vs Step-by-Step mode        |
-|                                                                                 |
-|  [ BACKEND: Dynamic Lesson & Step API Server ]                                  |
-|   - GET  /api/lesson/manifest       -> Lesson metadata, steps list, duration    |
-|   - GET  /api/lesson/step/:id       -> Step payload (narration, visuals, state) |
-|   - POST /api/lesson/generate-step  -> Dynamically synthesizes Step 3+ on demand|
-|                                                                                 |
-+---------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------+
+|                        UNIVERSAL VISUAL LESSON ENGINE TOPOLOGY                          |
++-----------------------------------------------------------------------------------------+
+|                                                                                         |
+|  [ CLIENT: Fixed Theater Video Player ] <---------- HTTP / JSON API ---------->         |
+|   - Fixed Viewport (100vw x 100vh, ZERO page scrolling)                                 |
+|   - 16:9 Studio Blackboard Theater Canvas                                               |
+|   - Dual-View Mode: [💡 Metaphor View] <-> [⚡ Physical System Reality View]             |
+|   - Real-Time Event-Driven Sync: onboundary events drive visual reveals in lockstep     |
+|   - Standardized Everywhere-Hover HUD Tooltip System anchored to prominent (i) badges   |
+|   - Live letter-by-letter kinetic typewriter streaming                                 |
+|   - Interactive physical manipulatives tailored to the active topic                     |
+|   - Draggable PIP subtitles & Natural Voice Speech Engine                               |
+|   - 2-Tier Master Study Notes Drawer (60-Sec Revision Cheatsheet + Detailed Guide)      |
+|                                                                                         |
+|  [ BACKEND: Dynamic Lesson & Step API Server ]                                          |
+|   - GET  /api/lesson/manifest?topic=<id>     -> Returns topic metadata, acts & duration |
+|   - GET  /api/lesson/step/:id?topic=<id>     -> Returns static foundation steps         |
+|   - POST /api/lesson/generate-step           -> Synthesizes dynamic deep dives on demand|
+|                                                                                         |
++-----------------------------------------------------------------------------------------+
 ```
 
-### 1.1 Non-Scrollable Player Contract (Fixed-Stage UI)
-Traditional scrollable web pages overwhelm learners and fail on classroom smartboards. The lesson interface **must strictly operate as a video/presentation player**:
-- `html, body { width: 100vw; height: 100vh; overflow: hidden; margin: 0; }`
-- The entire application lives inside a centered, responsive 16:9 theater stage canvas.
-- No scrollbars. All transitions, card reveals, code line traces, and explanations occur inside the fixed blackboard player frame.
-- Player controls are pinned within the player console: scrubber bar, step tracker pills, play/pause, step forward/backward, and mode toggle.
+### 1.1 Non-Scrollable Fixed Theater Player Contract
+Traditional scrollable web pages fail in lecture halls and smartboards because students lose context as content scrolls off-screen. The engine enforces a **strict video-player contract**:
+* `html, body { width: 100vw; height: 100vh; overflow: hidden; margin: 0; }`
+* The entire interactive experience lives inside a centered, responsive 16:9 studio blackboard canvas.
+* **No page scrollbars.** All animations, state transitions, interactive levers, and code traces occur inside the fixed blackboard stage.
+* All transport controls remain pinned in the bottom player console: scrubber bar, step track pills, play/pause, step forward/backward, speed controls, and mode toggles.
 
 ### 1.2 Dynamic Step-by-Step API Generation Lifecycle
-Rather than dumping an entire course into a static monolithic file that consumes excessive tokens and lacks adaptability:
-1. **Step 1 (First Principles / Curiosity Hook):** Pre-loaded and ready immediately on player boot.
-2. **Step 2 (The Mental Model / Two Rooms & TV Remote):** Pre-loaded and interactive.
-3. **Step 3+ (Code Tracing / Deep Dive / Diagnostics):** When the learner or instructor clicks Step 3 or scrubs forward, the player dispatches a real-time API call:
-   `POST /api/lesson/generate-step`
-   Payload: `{ topic: "java-memory", stepNumber: 3, language: "en" }`
-   The backend synthesizes or streams the rich JVMS memory state, code rows, and step explanations dynamically.
+To maximize cognitive retention and optimize server token consumption, lessons follow a **progressive on-demand lifecycle**:
+1. **Act 1 (First Principles / Curiosity Hook):** Pre-loaded on player boot.
+2. **Act 2 (The Core Mental Model & Interactive Manipulatives):** Pre-loaded and interactive.
+3. **Act 3+ (Live System Trace / Deep Dive / Diagnostics):** When the learner reaches Act 3, the player dispatches:
+   `POST /api/lesson/generate-step` with `{ topic: "<topic-id>", stepNumber: 3, language: "en" }`.
+   The backend synthesizes the rich bytecode trace, memory frames, tree nodes, or packet hops on demand.
 
 ---
 
-## 2. Pedagogical Standards: The 50-Year Veteran Teacher Mindset
+## 2. The 5 Universal Pedagogical Laws
 
-### 2.1 The Golden Mental Model Law
-Every complex computer science system MUST be introduced with an intuitive, tangible, everyday physical mental model before diving into low-level mechanics:
-- **Memory Architecture = The Two Rooms:**
-  - *The Quick Desk (Stack):* Fast, neat, organized. Ideal for temporary notes you need right now. Every time a method runs, it gets its own tidy work tray. When the method finishes—BAM! The tray is recycled in 0.001 milliseconds!
-  - *The Big Warehouse (Heap):* Huge shared storage. Ideal for permanent objects. When you type `new`, an object is constructed and placed safely on a warehouse shelf. It stays alive as long as anyone holds a receipt (reference) for it.
-- **Object References = The TV Remote Secret:**
-  - A reference variable is **NOT** the object; it is simply a **TV Remote Control** holding a channel address (e.g. `0x4A2F`).
-  - The object is the **65-inch Smart TV** mounted in the warehouse.
-  - Executing `Dog d2 = dog;` does **NOT** buy a second TV! It manufactures a second identical remote control pointed at the *exact same* TV. Pressing buttons on either remote changes the shared TV screen (**Aliasing**).
-  - Executing `d = new Dog("Max", 1);` points that local remote to a brand new TV; it does *not* affect the caller's remote.
-- **Parameter Passing = Copying the Remote:**
-  - Java is **strictly Pass-by-Value**. Passing an object reference copies the remote control address, never the TV itself!
+### Law 1: The Everyday Physical Metaphor Law
+Never introduce low-level hardware or mathematical mechanics without first anchoring in an everyday physical object:
+* **Memory Architecture:** The Personal Desk (Stack) vs. The Shared Warehouse (Heap).
+* **Object References:** The TV Remote Control (variable) vs. The 65-inch Smart TV (object).
+* **Concurrency & Locks:** Single Bathroom Key on a gas station wall (Mutex).
+* **Database Indexing:** Library Card Catalog vs. Walking through every shelf (Full Table Scan).
+* **Git Commit Graphs:** A Photo Album with labeled sticky notes (Branches/Pointers).
+* **TCP Handshake:** A walkie-talkie protocol ("Do you copy?", "Copy that, can you hear me?", "Loud and clear!").
 
-### 2.2 Strict Ban on Alien Hardware Jargon & Negative Framing
-Never intimidate students with robotic or alien phrases:
-- ❌ *"Physical Silicon Reality // The 16GB Memory Bus"* -> ✅ *"Where Does Your Code Actually Live? // The Mystery of Computer Memory"*
-- ❌ *"Exam Traps"* / *"Students Fail Here"* -> ✅ *"The 30-Second Mystery"* / *"The 4 Big Interview Questions"*
-- ❌ *"The Disaster Recovery Lab"* -> ✅ *"When Things Go Wrong: 3 Common Crashes Explained Simply"*
+### Law 2: The Dual-View Mental Bridge (Metaphor <-> Physical Reality)
+Metaphors alone can feel overly abstract or imprecise, while raw code alone can feel overwhelming. **Every lesson MUST support both views:**
+1. **[💡 Everyday Metaphor View]:** Visualizes physical desks, TV remotes, keys, or warehouses.
+2. **[⚡ Physical Reality View]:** Displays the exact computer architecture reality: real CPU registers (RSP), memory addresses (`0x4A2F`), 64-bit object headers, thread IDs, or network packets.
+*Students and teachers can toggle between views instantly with one click, bridging intuition and hard engineering.*
+
+### Law 3: Event-Driven Word & Screen Synchronization (Lockstep)
+Screen animations must **NEVER** depend on fragile, static `setTimeout` timers. Different browser voices and speech rates drift:
+* Narration text and on-screen cards must match sentence-for-sentence.
+* Screen card reveals, focus spotlights (`.sync-focused`), text highlights (`.sync-text-highlight`), and sound effects are triggered directly by speech engine `onboundary` character index events (`event.charIndex`).
+* **Pausing the player freezes the exact sentence on screen and in subtitles**, enabling teachers to pause at any second and lecture directly from the blackboard.
+
+### Law 4: Standardized Everywhere-Hover HUD Tooltip System
+* Never pop up tooltips on broad cards, whitespace, or hidden elements.
+* Prominent, accessible `(i)` badges (`.info-bubble-btn`) are placed beside key concepts.
+* Hovering or clicking an `(i)` badge anchors a floating HUD Card with:
+  1. **Topic Badge & Standard** (e.g. `JVMS §2.6`, `RFC 793`).
+  2. **Everyday Physical Analogy**.
+  3. **Simple English Explanation** (1–2 sentences, jargon-free).
+  4. **Interactive "Launch Explainer" Action** (runs live simulations or opens deep dive modals).
+
+### Law 5: Two-Tier Sellable Study Notes
+Every lesson includes a slide-out study drawer with two distinct modes:
+1. **⚡ 60-Second Revision Cheatsheet:** Comparison tables, 3 golden laws, 1-line exam definitions.
+2. **📖 Detailed Architecture Guide:** Deep specification dives, anatomical breakdowns of frames/objects, and classic technical interview trick questions with step-by-step solutions.
+
+### Law 6: The Law of Dynamic Pedagogical Trajectory (Zero Fixed Step / Act Limits)
+The Visual Lesson Engine must **NEVER hardcode or constrain lessons to a rigid number of steps or acts** (such as "always 3 steps" or "always 4 acts"). The pedagogical trajectory and step count ($N \ge 1$) must be **decided dynamically** based on cognitive load, concept complexity, and curriculum depth:
+1. **Cognitive Load & Subject Granularity:**
+   - **Micro-Concepts ($N = 2$ Steps):** Focused intuitive model + interactive verification (e.g., Big-O Asymptotics, IPv4 Subnetting, Two's Complement).
+   - **Standard Architectural Concepts ($N = 3–4$ Steps):** Everyday Hook &rarr; Interactive Manipulative &rarr; Dynamic Execution Trace &rarr; Crash Diagnostics (e.g., Java Memory Architecture, SQL B-Tree Indexing, Git Internal DAGs).
+   - **Complex Distributed Systems & Protocols ($N = 5–7+$ Steps):** Multi-phase transitions requiring progressive state evolution (e.g., Raft Consensus: Hook &rarr; Leader Heartbeat &rarr; Log Replication &rarr; Split-Brain Election &rarr; Quorum Recovery &rarr; Uncommitted Rollbacks).
+2. **Dynamic Client Navigation Contract:**
+   - The player transport console must never rely on hardcoded HTML buttons. It dynamically generates timeline step pills, fraction milestones, scrubber percentages, timecodes (`01:00 / 0N:00`), and keyboard listeners (`1` to `N`) directly from `manifest.totalSteps` and `manifest.stepsSummary`.
+3. **On-Demand REST API Synthesis:**
+   - While foundation acts pre-load on player boot, deep-dive steps are synthesized on demand via `POST /api/lesson/generate-step` with `{ topic, stepNumber, language }`, enabling infinite curricular scale without monolithic asset bundles.
+
+### Law 7: The Law of Interactive Underscored Terms & 4-Tab Pathway Explorers
+Never present static text without interactive discovery hooks. All core pedagogical keywords (variables, reference handles, allocation keywords, memory regions) must feature **subtle, accessible dashed underlines** (`.concept-term`):
+* Clicking any underlined word instantly opens the **4-Tab Concept Knowledge Pathway Modal**:
+  1. **💡 Everyday Analogy:** Real-world physical intuition without jargon.
+  2. **🏛️ Official Spec (JLS / JVMS / RFC):** Formal standard references, bytecode opcodes, and hardware execution models.
+  3. **🚀 Interactive Mini-Lab:** Live runnable widget or simulation test for instant validation.
+  4. **🗺️ Interview & Learning Path:** Common interview traps, architectural mitigations, and next curriculum milestones.
+
+### Law 8: Dual Synchronous Word Illumination (Screen & Subtitles)
+Speech synchronization must illuminate the stage chalkboard, not just the floating subtitle box:
+* On-screen descriptive text and code snippets are tokenized into `.screen-word` elements.
+* Live speech `onboundary` events trigger simultaneous kinetic highlighting across both the subtitle box (`.caption-word.word-active`) and the active chalkboard card (`.screen-word.word-active`).
+* The learner's visual focus is naturally guided directly onto the on-screen diagrams and code representations.
 
 ---
 
-## 3. UI/UX Standards: Clean Matte Studio Blackboard
+## 3. Reference Case Studies Across Computer Science
 
-### 3.1 Color Palette & Typography
-- **Backgrounds:** Deep matte blackboard black (`#09090b`), dark graphite panels (`#121215`, `#18181b`), subtle zinc borders (`#27272a`).
-- **Accents:** Sky blue (`#38bdf8`), soft lavender (`#818cf8`), fresh mint (`#34d399`), warm amber (`#fbbf24`), muted coral (`#f43f5e`).
-- **Zero Hacker Clichés:** Strictly NO green terminal fonts, NO glowing neon text-shadows, NO CRT scanlines, and NO matrix rain canvases. Clean, modern, high-end developer masterclass aesthetic (Vercel/Linear style).
+The engine easily adapts to any technical subject. Below are reference mappings:
 
-### 3.2 Live Kinetic Letter-by-Letter Streaming (Zero Dumping)
-- The stage starts clean and empty.
-- Text, questions, code step notes, and explanations appear **live letter-by-letter** with a blinking cursor `|` at natural reading cadence (~16–18ms per character).
-- On fast scrubbing or seeking, running character timers cancel immediately and populate the full text instantly without lag.
-
-### 3.3 Humane Lecture Pacing & Dual Mode
-- **Pacing:** ~18 to 24 seconds per step with deliberate 0.90x speech rate.
-- **Speech Synchronization:** Audio listens for speech `utter.onend` instead of an arbitrary early timeout.
-- **5-Second Soak Pause:** After narration finishes speaking, the engine grants a 5-second comprehension pause before advancing, allowing students to inspect the diagram and absorb the concept.
-- **Dual Mode:**
-  - `Continuous Auto-Play`: Automatically advances through steps with 5-second absorption pauses.
-  - `Step-by-Step Classroom Mode`: Automatically pauses after each step, displaying a clear prompt:
-    `✨ Step Complete • Ready for Next? Press [→] or Space ▶`
+| Topic | Act 1: The Intuitive Hook | Act 2: Interactive Manipulative | Act 3: Live System Trace (API) | Act 4: Common Crashes |
+| :--- | :--- | :--- | :--- | :--- |
+| **Java Memory Architecture** *(Flagship)* | Where does code live? The Desk & Warehouse. | Dual TV Remotes pointing at Smart TV (Aliasing). | 7-stage JVMS Call Stack & Heap execution trace. | `StackOverflowError` vs `OutOfMemoryError`. |
+| **Concurrency & Deadlocks** | The Dining Philosophers at dinner table. | Interactive resource locker with 2 threads & 2 keys. | Thread state timeline: RUNNABLE &rarr; BLOCKED &rarr; DEADLOCK. | Race conditions, Thread Starvation. |
+| **Database B-Tree Indexing** | Searching a phonebook vs reading every page. | Interactive B-Tree node split & balance slider. | Page fetch I/O counter: O(log N) vs O(N). | Index fragmentation, unindexed WHERE clauses. |
+| **Git Internal Object Graphs** | Snapshots in a photo album with sticky notes. | Branch pointer mover (`main`, `feature`, `HEAD`). | Commit tree DAG: Blobs, Trees, Commit hashes. | Detached HEAD, merge conflicts. |
+| **TCP 3-Way Handshake** | Walkie-talkie radio confirmation. | SYN / SYN-ACK / ACK signal packet sender. | Wireshark packet sequence with sequence numbers. | SYN flood attack, connection timeouts. |
 
 ---
 
-## 4. Bilingual Engine: Simple English & Romanized Telugish
+## 4. UI/UX Style Specification: Clean Matte Blackboard
 
-- **English:** Clear, concise, active voice with zero unnecessarily complex sentences.
-- **Telugish:** Hyderabad B.Tech student vernacular written **exclusively in the English alphabet** (zero Telugu script characters `\u0C00-\u0C7F`), making it effortless for bilingual students to read and follow.
-- **Instant Toggle:** The language button switches UI, subtitles, and narration instantly with zero page reload or timeline loss.
+* **Palette:** Deep matte blackboard black (`#09090b`), dark graphite panels (`#141418`, `#18181b`), subtle zinc borders (`#27272a`).
+* **Accents:** Electric sky blue (`#38bdf8`), mint emerald (`#34d399`), warm amber (`#fbbf24`), lavender indigo (`#818cf8`), muted rose (`#f43f5e`).
+* **Zero Hacker Clichés:** Strictly NO green terminal fonts, matrix rain, glowing neon text-shadows, or retro scanlines. Clean, modern Linear/Vercel design aesthetic.
+* **Humane Voice & Silence on Pause:**
+  * Uses prioritized high-quality natural voices (`Microsoft Natural`, `Google Neural`).
+  * **Strict absolute silence when paused** (`silenceAll()` zeroes Web Audio gain and disconnects all oscillators). Background music is strictly OFF by default.
 
 ---
 
-## 5. Development & Deployment Protocol
+## 5. Implementation Verification Protocol
 
-1. **Backend Server (`server/`):**
-   - Implements native REST endpoints (`/api/lesson/manifest`, `/api/lesson/step/:id`, `/api/lesson/generate-step`).
-   - Serves static assets from `client/`.
-2. **Frontend Player (`client/`):**
-   - Zero-scroll fixed layout (`player.css`).
-   - Core player loop, timeline scrubber, and step management (`app.js`).
-   - API client for on-demand step fetching and generation (`api.js`).
-   - Letter-by-letter blackboard streaming engine (`typewriter.js`).
-   - Natural speech synthesis and Web Audio synthesizer (`audio.js`).
-3. **Verification:**
-   - Server launches and responds with HTTP 200 on all endpoints.
-   - Frontend loads in browser as a fixed-viewport player with zero scrollbars.
-   - Step 1 and Step 2 render and play smoothly.
-   - Clicking Step 3 triggers the API call and streams the dynamically generated JVMS memory execution trace.
+Whenever building or testing any topic on the Visual Lesson Engine:
+1. Run `node test/verify_app.js` to ensure zero syntax errors, fixed 100vw x 100vh viewport contract, and zero Telugu script characters across files.
+2. Verify that `GET /api/lesson/manifest`, `GET /api/lesson/step/:id`, and `POST /api/lesson/generate-step` respond with HTTP 200.
+3. Test event-driven speech synchronization: confirm that screen cards and subtitles trigger simultaneously on word boundaries.
+4. Verify that hover HUD tooltips trigger ONLY on explicit `(i)` badges, never on empty whitespace.
+5. Verify that the Dual-View toggle (`[💡 Metaphor View]` vs `[⚡ Physical RAM View]`) switches content cleanly.

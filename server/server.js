@@ -118,9 +118,9 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
-    // If step 3 requested via GET, synthesize it dynamically
-    if (stepNum === 3) {
-      const generated = generateDynamicStep({ stepNumber: 3 });
+    // Dynamic On-Demand Synthesis for any non-preloaded step N
+    const generated = generateDynamicStep({ stepNumber: stepNum });
+    if (generated && !generated.error) {
       return sendJson(res, 200, {
         success: true,
         data: generated
