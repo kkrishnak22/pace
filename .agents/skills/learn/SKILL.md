@@ -1,3 +1,8 @@
+---
+name: learn
+description: Guides users through learning topics with interactive feedback loops, retrieval practice, and progressive mastery.
+---
+
 ## When to Use
 
 Use when this workflow matches the user request: Help a user learn a topic through adaptive tutoring, lesson planning, practice, retrieval checks, explanations, study guides, or exercises. Use when the user asks to learn, understand, practice, drill, review, study, or be tutored on something.

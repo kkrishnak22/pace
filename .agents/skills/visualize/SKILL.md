@@ -1,3 +1,8 @@
+---
+name: visualize
+description: Interactive data visualization, code architecture traces, SVG diagrams, and dashboards.
+---
+
 # Visualize
 
 Use `show_widget` when seeing or interacting with a result helps the user reason

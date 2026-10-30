@@ -1,3 +1,8 @@
+---
+name: three-js-animation
+description: 3D interactive graphics, shaders, and camera choreography using Three.js and WebGL.
+---
+
 # Three.js Animation
 
 ## Detailed Guide

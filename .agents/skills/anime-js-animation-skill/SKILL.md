@@ -1,3 +1,8 @@
+---
+name: anime-js-animation-skill
+description: High-fidelity JavaScript animation engine for complex timelines, SVG morphing/drawing, and spring physics.
+---
+
 # Anime.js Animation Skill
 
 [Anime.js](https://animejs.com/) is a lightweight but extremely powerful JavaScript animation engine. It excels at complex timelines, staggering, and precise control over DOM, CSS, and SVGs.

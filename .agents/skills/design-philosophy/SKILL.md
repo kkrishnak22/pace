@@ -1,3 +1,8 @@
+---
+name: design-philosophy
+description: Visual philosophy and art-direction guidance for intentional, hierarchy-driven UI design.
+---
+
 # Design philosophy
 ## When to Use
 

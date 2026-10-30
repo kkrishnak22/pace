@@ -1,3 +1,8 @@
+---
+name: design-thinking
+description: Direction, intent, user empathy, and mental model framing for frontend engineering.
+---
+
 # Design thinking
 ## When to Use
 

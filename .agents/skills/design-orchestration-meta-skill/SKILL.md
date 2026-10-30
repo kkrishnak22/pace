@@ -1,3 +1,8 @@
+---
+name: design-orchestration-meta-skill
+description: Meta-skill controlling design workflows, routing between skills, and enforcing validation gates.
+---
+
 # Design Orchestration (Meta-Skill)
 
 ## Purpose

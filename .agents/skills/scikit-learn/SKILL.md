@@ -1,3 +1,8 @@
+---
+name: scikit-learn
+description: Machine learning workflows, model training, evaluation, and tabular data science with scikit-learn.
+---
+
 # Scikit-learn
 
 ## Detailed Guide

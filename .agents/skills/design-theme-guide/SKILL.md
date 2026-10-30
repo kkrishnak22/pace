@@ -1,3 +1,8 @@
+---
+name: design-theme-guide
+description: Theme value sets, semantic color mapping, accessibility contrast, and light/dark mode switching.
+---
+
 # Design Theme Guide
 
 **What it is:** the documented value set a business designs against - colour, type, space, radius, motion - with every colour pair contrast-tested and written down.

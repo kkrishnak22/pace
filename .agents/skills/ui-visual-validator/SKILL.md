@@ -1,3 +1,8 @@
+---
+name: ui-visual-validator
+description: Visual testing and validation for layout stability, responsive scaling, and visual regressions.
+---
+
 ## Use this skill when
 
 - Working on ui visual validator tasks or workflows

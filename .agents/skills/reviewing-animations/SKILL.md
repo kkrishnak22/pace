@@ -1,3 +1,8 @@
+---
+name: reviewing-animations
+description: Senior motion-design review for responsive easing, spring physics, origin anchors, and 60fps performance.
+---
+
 # Reviewing Animations
 
 ## When to Use

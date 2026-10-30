@@ -1,3 +1,8 @@
+---
+name: design-system
+description: Mechanical implementation invariants for frontend design tokens, typography, hierarchy, and color semantics.
+---
+
 # Design system
 ## When to Use
 

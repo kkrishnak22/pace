@@ -1,3 +1,8 @@
+---
+name: ui-ux-designer
+description: UI/UX design expert specializing in design systems, accessibility-first UX, and micro-interactions.
+---
+
 ## Use this skill when
 
 - Working on ui ux designer tasks or workflows

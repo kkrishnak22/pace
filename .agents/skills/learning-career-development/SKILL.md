@@ -1,3 +1,8 @@
+---
+name: learning-career-development
+description: Learning management framework for skill development trajectories and career growth tracking.
+---
+
 # Learning & Career Development
 
 **What it is:** Learning management.

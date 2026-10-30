@@ -1,3 +1,8 @@
+---
+name: continuous-learning-v-instinct
+description: Continuous learning system that extracts reusable coding instincts and project-scoped patterns.
+---
+
 # Continuous Learning v2.1 - Instinct
 -Based Architecture
 

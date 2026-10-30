@@ -1,3 +1,8 @@
+---
+name: pro-motion-mg-film-audio-first-launch-brand-tvc-promo
+description: Audio-first motion graphics methodology for high-impact product launches, brand films, and promotional motion design.
+---
+
 # Pro Motion — MG film, audio first (launch · brand · TVC · promo)
 
 A method for making motion-graphics films that read as designed, not templated — in code, fast, locked to music.

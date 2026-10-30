@@ -1,3 +1,8 @@
+---
+name: design-spells-skill
+description: Curated micro-interactions, craft details, and delightful UI patterns from exceptional products.
+---
+
 # Design Spells Skill
 
 [Design Spells](https://www.designspells.com/) is a collection of exceptional design details—micro-interactions, easter eggs, and clever UX patterns—that transform standard interfaces into memorable digital experiences.
