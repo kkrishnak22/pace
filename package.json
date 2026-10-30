@@ -1,0 +1,19 @@
+{
+  "name": "pace-visual-lesson-engine",
+  "version": "2.0.0",
+  "description": "Interactive Visual Lesson Player & Dynamic Generation Engine",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "test": "node test/verify_app.js"
+  },
+  "keywords": [
+    "education",
+    "visual-lesson",
+    "java-memory",
+    "interactive-player"
+  ],
+  "author": "Pace Engineering",
+  "license": "MIT"
+}
+

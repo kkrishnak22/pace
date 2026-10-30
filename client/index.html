@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Java Memory Architecture: Stack vs. Heap & Pass-by-Value</title>
+  <link rel="stylesheet" href="css/player.css">
+</head>
+<body>
+
+  <!-- MASTER FIXED-VIEWPORT PLAYER APPLICATION (ZERO PAGE SCROLLING) -->
+  <div class="player-shell">
+
+    <!-- 1. TOP HEADER APP BAR -->
+    <header class="player-top-header">
+      <div class="brand-left">
+        <span class="brand-badge">JAVA // MASTERCLASS</span>
+        <span class="lesson-title-text" id="lesson-header-title">Java Memory Architecture: Stack vs. Heap & Pass-by-Value</span>
+      </div>
+
+      <div class="header-actions">
+        <div class="api-status-badge" id="api-status-indicator">
+          <span class="api-pulse-dot"></span>
+          <span>API Connected (Port 5000)</span>
+        </div>
+
+        <div class="lang-toggle-wrap">
+          <button class="btn-lang active-lang" id="lang-en" onclick="setLanguage('en')">EN</button>
+          <button class="btn-lang" id="lang-telugish" onclick="setLanguage('telugish')">Telugish (Hyderabad)</button>
+        </div>
+
+        <button class="btn-ctrl" onclick="toggleNotesDrawer()" title="Revision Study Notes [N]" style="width:auto; padding:0 10px; font-size:11px; font-weight:700; gap:4px;">
+          <span>📝</span>
+          <span>Notes</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- 2. CENTER THEATER STAGE (16:9 STUDIO BLACKBOARD) -->
+    <main class="stage-viewport">
+      <div class="blackboard-canvas" id="blackboard-stage">
+
+        <!-- Stage Canvas Header -->
+        <div class="canvas-header">
+          <div class="canvas-step-badge">
+            <span id="step-indicator-badge">STEP 01 // CORE PRINCIPLES</span>
+            <span style="color:#71717a; font-size:10px;">JNTUH CS305PC &bull; JVMS §2.5</span>
+          </div>
+          <h1 class="canvas-step-title" id="step-title-live">Where Does Your Code Actually Live?</h1>
+          <p class="canvas-step-desc" id="step-desc-live">When you write code and click Run, magic happens behind the screen. But where do your variables and objects actually live?</p>
+        </div>
+
+        <!-- Stage Body Mount (Where Visual Manipulatives Render) -->
+        <div class="canvas-body" id="stage-body-mount">
+          <!-- Step views injected dynamically by app.js -->
+        </div>
+
+        <!-- Dynamic API Generation Loading Overlay -->
+        <div class="api-loading-overlay" id="api-loading-overlay" style="display:none;">
+          <div class="api-loader-card">
+            <div class="spinner-ring"></div>
+            <div style="font-size:13px; font-weight:800; color:#ffffff;" id="api-loader-msg">⚡ Calling Lesson Engine API: POST /api/lesson/generate-step...</div>
+            <div style="font-size:11px; color:#94a3b8; margin-top:6px; font-family:var(--font-mono);">Synthesizing live JVMS bytecode & memory execution trace...</div>
+          </div>
+        </div>
+
+        <!-- Floating Draggable PIP Subtitles Card (YouTube Style) -->
+        <div class="draggable-subtitles-card" id="draggable-subtitles-card">
+          <div class="sub-header" id="sub-drag-header" title="Drag anywhere on screen">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span>⠿</span>
+              <span style="font-weight:800; color:var(--accent-blue);">LIVE INSTRUCTOR CAPTIONS</span>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button onclick="resetSubtitlePosition()" title="Snap back to center" style="background:transparent; border:none; color:#71717a; cursor:pointer;">⟲</button>
+              <button onclick="toggleSubtitleSize()" title="Toggle size" style="background:transparent; border:none; color:#71717a; cursor:pointer;">↕</button>
+              <button onclick="toggleSubtitlesVisible()" title="Close captions [C]" style="background:transparent; border:none; color:#71717a; cursor:pointer;">✕</button>
+            </div>
+          </div>
+          <div class="sub-body" id="live-subtitle-txt">
+            Welcome! Whenever you write code and click Run, where does your data actually sleep and wake up?
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- 3. PINNED BOTTOM PLAYER CONSOLE -->
+    <footer class="player-bottom-console">
+
+      <!-- Timeline Scrubber Bar -->
+      <div class="scrubber-bar-wrap" id="scrubber-bar-wrap" onclick="seekByClick(event)">
+        <div class="scrubber-fill" id="scrubber-fill"></div>
+      </div>
+
+      <!-- Controls Transport Row -->
+      <div class="transport-row">
+        
+        <!-- Left: Play/Pause, Step Nav, Time -->
+        <div class="transport-left">
+          <button class="btn-ctrl" onclick="stepBackward()" title="Previous Step [←]">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>
+          </button>
+          
+          <button class="btn-play-pause" onclick="togglePlayPause()" title="Play / Pause [Space]">
+            <span id="play-pause-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </span>
+          </button>
+
+          <button class="btn-ctrl" onclick="stepForward()" title="Next Step [→]">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>
+          </button>
+
+          <span style="font-family:var(--font-mono); font-size:11.5px; font-weight:700; color:#cbd5e1; margin-left:6px;">
+            <span id="time-current">01:00</span> / <span id="time-total">03:00</span>
+          </span>
+        </div>
+
+        <!-- Center: Step Track Pills -->
+        <div class="transport-center">
+          <div class="step-pills-row">
+            <button class="step-pill-btn pill-active" id="step-pill-1" onclick="loadAndRenderStep(1)">
+              <span>Step 1: Where Code Lives</span>
+            </button>
+            <button class="step-pill-btn" id="step-pill-2" onclick="loadAndRenderStep(2)">
+              <span>Step 2: TV Remote Secret</span>
+            </button>
+            <button class="step-pill-btn pill-api-badge" id="step-pill-3" onclick="loadAndRenderStep(3)">
+              <span>Step 3: Watching Memory Move</span>
+              <span style="font-size:9px; background:var(--accent-amber); color:#09090b; padding:1px 5px; border-radius:3px; font-weight:800;">⚡ API</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: Mode Toggle, Speeds, Fullscreen -->
+        <div class="transport-right">
+          <button class="btn-mode-toggle" id="btn-mode-toggle" onclick="toggleStepMode()" title="Toggle Auto-Play vs Step-by-Step Mode [M]">
+            <span id="mode-icon">📺</span>
+            <span id="mode-label">Mode: Continuous</span>
+          </button>
+
+          <div style="display:flex; background:#18181b; border:1px solid var(--border-subtle); border-radius:6px; overflow:hidden;">
+            <button class="btn-speed-item" onclick="setPlaybackSpeed(0.75)" style="background:transparent; border:none; color:#a1a1aa; padding:4px 8px; font-size:10.5px; font-weight:700; cursor:pointer;">0.75x</button>
+            <button class="btn-speed-item active-speed" onclick="setPlaybackSpeed(1.0)" style="background:var(--accent-blue); border:none; color:#09090b; padding:4px 8px; font-size:10.5px; font-weight:700; cursor:pointer;">1.0x</button>
+            <button class="btn-speed-item" onclick="setPlaybackSpeed(1.25)" style="background:transparent; border:none; color:#a1a1aa; padding:4px 8px; font-size:10.5px; font-weight:700; cursor:pointer;">1.25x</button>
+          </div>
+
+          <button class="btn-ctrl" onclick="toggleFullscreen()" title="Fullscreen [F]">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          </button>
+        </div>
+
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Study Notes Slide-out Drawer -->
+  <div id="notes-drawer" style="position:fixed; top:0; right:-420px; width:400px; height:100vh; background:#121215; border-left:1px solid #27272a; z-index:200; transition:right 0.3s ease; display:flex; flex-direction:column; padding:20px; box-shadow:-12px 0 36px rgba(0,0,0,0.7);">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #27272a; padding-bottom:12px; margin-bottom:16px;">
+      <div style="font-weight:800; color:#ffffff; font-size:13px;">📝 STUDENT REVISION NOTES</div>
+      <button onclick="toggleNotesDrawer()" style="background:transparent; border:none; color:#a1a1aa; font-size:14px; cursor:pointer;">✕</button>
+    </div>
+    <div style="flex:1; overflow-y:auto; font-size:12px; line-height:1.6; color:#cbd5e1;">
+      <p><strong>1. The Two Rooms:</strong><br>• Stack: Personal study desk for fast local variables and method call trays (LIFO). Wiped in 0.001ms.<br>• Heap: Spacious shared warehouse for big objects created with <code>new</code>.</p>
+      <p style="margin-top:12px;"><strong>2. The TV Remote Secret:</strong><br>• The variable is just a TV remote control dialed into an address (e.g. <code>0x4A2F</code>).<br>• <code>Dog d2 = dog;</code> creates a second remote control tuned to the SAME television (Aliasing)!</p>
+      <p style="margin-top:12px;"><strong>3. Pass-by-Value:</strong><br>• Java always copies the value on the desk.<br>• Passing an object copies the remote's address, never the television!</p>
+    </div>
+    <div style="margin-top:16px; display:flex; gap:8px;">
+      <button onclick="navigator.clipboard.writeText('Java Memory Architecture: Stack is your fast desk; Heap is your object warehouse. Variables are TV remote controls!'); alert('Notes copied to clipboard!');" style="flex:1; background:#18181b; border:1px solid #27272a; color:#ffffff; padding:6px; border-radius:4px; font-size:11px; font-weight:700; cursor:pointer;">📋 Copy Notes</button>
+      <button onclick="window.print()" style="flex:1; background:var(--accent-blue); border:none; color:#09090b; padding:6px; border-radius:4px; font-size:11px; font-weight:800; cursor:pointer;">🖨️ Print / PDF</button>
+    </div>
+  </div>
+
+  <script>
+    function toggleNotesDrawer() {
+      const drawer = document.getElementById('notes-drawer');
+      if (!drawer) return;
+      const isOpen = drawer.style.right === '0px';
+      drawer.style.right = isOpen ? '-420px' : '0px';
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+      } else if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+
+    function seekByClick(e) {
+      const wrap = document.getElementById('scrubber-bar-wrap');
+      if (!wrap) return;
+      const rect = wrap.getBoundingClientRect();
+      const ratio = (e.clientX - rect.left) / rect.width;
+      if (ratio < 0.35) loadAndRenderStep(1);
+      else if (ratio < 0.70) loadAndRenderStep(2);
+      else loadAndRenderStep(3);
+    }
+  </script>
+
+  <!-- Modular Client Player Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/typewriter.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
+
