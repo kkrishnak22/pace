@@ -56,12 +56,31 @@
 
         <!-- Stage Canvas Header -->
         <div class="canvas-header">
-          <div class="canvas-step-badge">
-            <span id="step-indicator-badge">STEP 01 // CORE PRINCIPLES</span>
-            <span style="color:#71717a; font-size:10px;">JNTUH CS305PC &bull; JVMS §2.5</span>
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div>
+              <div class="canvas-step-badge">
+                <span id="step-indicator-badge">STEP 01 // CORE PRINCIPLES</span>
+                <span style="color:#71717a; font-size:10px;">JNTUH CS305PC &bull; JVMS §2.5</span>
+              </div>
+              <div style="display:flex; align-items:center;">
+                <h1 class="canvas-step-title" id="step-title-live">Where Does Your Code Actually Live?</h1>
+                <button class="info-bubble-btn" id="btn-header-info" onclick="openHudTooltip(event, 'stack-memory')" title="Click for Simple English Explainer">i</button>
+              </div>
+            </div>
+
+            <!-- Dual-View Toggle: Metaphor vs Exact RAM Reality -->
+            <div class="view-mode-toggle" id="view-mode-toggle">
+              <button class="btn-view-mode active-view" id="view-btn-metaphor" onclick="switchVisualView('metaphor')" title="Intuitive Everyday Physical Model">
+                <span>💡</span>
+                <span>Metaphor View</span>
+              </button>
+              <button class="btn-view-mode" id="view-btn-ram" onclick="switchVisualView('ram')" title="Real Computer RAM Structure">
+                <span>⚡</span>
+                <span>Physical RAM View</span>
+              </button>
+            </div>
           </div>
-          <h1 class="canvas-step-title" id="step-title-live">Where Does Your Code Actually Live?</h1>
-          <p class="canvas-step-desc" id="step-desc-live">When you write code and click Run, magic happens behind the screen. But where do your variables and objects actually live?</p>
+          <p class="canvas-step-desc" id="step-desc-live">Whenever you write Java code, your computer divides memory into two distinct rooms: Room 1 (The Stack Desk) and Room 2 (The Heap Warehouse).</p>
         </div>
 
         <!-- Stage Body Mount (Where Visual Manipulatives Render) -->
@@ -170,20 +189,164 @@
 
   </div>
 
-  <!-- Study Notes Slide-out Drawer -->
-  <div id="notes-drawer" style="position:fixed; top:0; right:-420px; width:400px; height:100vh; background:#121215; border-left:1px solid #27272a; z-index:200; transition:right 0.3s ease; display:flex; flex-direction:column; padding:20px; box-shadow:-12px 0 36px rgba(0,0,0,0.7);">
-    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #27272a; padding-bottom:12px; margin-bottom:16px;">
-      <div style="font-weight:800; color:#ffffff; font-size:13px;">📝 STUDENT REVISION NOTES</div>
-      <button onclick="toggleNotesDrawer()" style="background:transparent; border:none; color:#a1a1aa; font-size:14px; cursor:pointer;">✕</button>
+  <!-- Study Notes Slide-out Drawer: Two Professional Modes (Revision + Detailed) -->
+  <div id="notes-drawer" style="position:fixed; top:0; right:-460px; width:440px; height:100vh; background:#121215; border-left:1px solid #27272a; z-index:200; transition:right 0.3s ease; display:flex; flex-direction:column; padding:20px; box-shadow:-16px 0 40px rgba(0,0,0,0.8);">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #27272a; padding-bottom:12px; margin-bottom:12px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:16px;">📝</span>
+        <span style="font-weight:800; color:#ffffff; font-size:13px; letter-spacing:0.3px;">STUDENT MASTERCLASS NOTES</span>
+      </div>
+      <button onclick="toggleNotesDrawer()" style="background:transparent; border:none; color:#a1a1aa; font-size:16px; cursor:pointer;" title="Close [N]">✕</button>
     </div>
-    <div style="flex:1; overflow-y:auto; font-size:12px; line-height:1.6; color:#cbd5e1;">
-      <p><strong>1. The Two Rooms:</strong><br>• Stack: Personal study desk for fast local variables and method call trays (LIFO). Wiped in 0.001ms.<br>• Heap: Spacious shared warehouse for big objects created with <code>new</code>.</p>
-      <p style="margin-top:12px;"><strong>2. The TV Remote Secret:</strong><br>• The variable is just a TV remote control dialed into an address (e.g. <code>0x4A2F</code>).<br>• <code>Dog d2 = dog;</code> creates a second remote control tuned to the SAME television (Aliasing)!</p>
-      <p style="margin-top:12px;"><strong>3. Pass-by-Value:</strong><br>• Java always copies the value on the desk.<br>• Passing an object copies the remote's address, never the television!</p>
+
+    <!-- Notes Tabs Switcher -->
+    <div class="notes-tabs-row">
+      <button class="btn-notes-tab notes-tab-active" id="tab-btn-revision" onclick="switchNotesTab('revision')">
+        ⚡ 60-Sec Revision
+      </button>
+      <button class="btn-notes-tab" id="tab-btn-detailed" onclick="switchNotesTab('detailed')">
+        📖 Detailed Guide
+      </button>
     </div>
-    <div style="margin-top:16px; display:flex; gap:8px;">
-      <button onclick="navigator.clipboard.writeText('Java Memory Architecture: Stack is your fast desk; Heap is your object warehouse. Variables are TV remote controls!'); alert('Notes copied to clipboard!');" style="flex:1; background:#18181b; border:1px solid #27272a; color:#ffffff; padding:6px; border-radius:4px; font-size:11px; font-weight:700; cursor:pointer;">📋 Copy Notes</button>
-      <button onclick="window.print()" style="flex:1; background:var(--accent-blue); border:none; color:#09090b; padding:6px; border-radius:4px; font-size:11px; font-weight:800; cursor:pointer;">🖨️ Print / PDF</button>
+
+    <!-- TAB 1: 60-SECOND REVISION CHEATSHEET -->
+    <div id="notes-content-revision" style="flex:1; overflow-y:auto; font-size:12px; line-height:1.6; color:#cbd5e1; padding-right:4px;">
+      <div class="notes-callout-card">
+        <strong>🌟 The 3 Golden Laws to Never Forget:</strong><br>
+        1. <strong>Stack (The Desk):</strong> Holds local numbers & remote handles. Super fast (0.001ms), cleaned up automatically when method finishes.<br>
+        2. <strong>Heap (The Warehouse):</strong> Holds all objects created with <code>new</code>. Managed by the Garbage Collector robot.<br>
+        3. <strong>Variables are TV Remotes:</strong> <code>Dog d2 = dog;</code> does NOT buy a second TV! It creates a second remote tuned to the SAME television (Aliasing)!
+      </div>
+
+      <div class="notes-section-title">📊 Stack vs. Heap Comparison</div>
+      <table class="notes-cheatsheet-table">
+        <thead>
+          <tr>
+            <th>Property</th>
+            <th>Stack Memory</th>
+            <th>Heap Memory</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Analogy</strong></td>
+            <td>Personal Study Desk</td>
+            <td>Shared Warehouse</td>
+          </tr>
+          <tr>
+            <td><strong>Speed</strong></td>
+            <td>Ultra-Fast (~0.001ms)</td>
+            <td>Slower (Dynamic Pointers)</td>
+          </tr>
+          <tr>
+            <td><strong>What it Holds</strong></td>
+            <td>Primitives & Remote Handles</td>
+            <td>Object Instances & Arrays</td>
+          </tr>
+          <tr>
+            <td><strong>Lifecycle</strong></td>
+            <td>Method Scope (LIFO)</td>
+            <td>Alive while referenced</td>
+          </tr>
+          <tr>
+            <td><strong>Managed By</strong></td>
+            <td>CPU Stack Pointer (RSP)</td>
+            <td>Garbage Collector (GC)</td>
+          </tr>
+          <tr>
+            <td><strong>Crash Error</strong></td>
+            <td><code>StackOverflowError</code></td>
+            <td><code>OutOfMemoryError</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="notes-section-title">🔑 Pass-by-Value in One Sentence</div>
+      <p style="background:#09090b; padding:8px 12px; border-radius:6px; border:1px solid #27272a;">
+        Java ALWAYS passes by value. Passing an object copies the <strong>remote control frequency</strong> (e.g. <code>0x4A2F</code>), NEVER the physical television!
+      </p>
+    </div>
+
+    <!-- TAB 2: DETAILED ARCHITECTURE & INTERVIEW GUIDE -->
+    <div id="notes-content-detailed" style="flex:1; overflow-y:auto; font-size:12px; line-height:1.6; color:#cbd5e1; display:none; padding-right:4px;">
+      <div class="notes-section-title">🏛️ 1. JVM Specification Architecture (JVMS §2.5)</div>
+      <p>Inside the Java Virtual Machine, physical RAM is segmented into two categories:</p>
+      <ul style="margin-left:18px; margin-top:4px;">
+        <li><strong>Thread-Private (Stack):</strong> Each executing thread has its own private JVM Stack. Contains method execution frames. Threads can NEVER read another thread's stack trays!</li>
+        <li><strong>Thread-Shared (Heap):</strong> Single universal memory pool shared across all threads. Synchronized access is required when multiple threads write to the same object.</li>
+      </ul>
+
+      <div class="notes-section-title">📦 2. Anatomical Breakdown of a Stack Frame</div>
+      <p>Every time a Java method is called, an exact frame is allocated containing:</p>
+      <ol style="margin-left:18px; margin-top:4px;">
+        <li><strong>Local Variable Array:</strong> Slot 0 = <code>this</code> (for instance methods), Slot 1+ = method parameters, followed by local variables.</li>
+        <li><strong>Operand Stack:</strong> The LIFO workspace where JVM bytecode instructions (e.g. <code>iload</code>, <code>iadd</code>) perform arithmetic.</li>
+        <li><strong>Frame Data:</strong> Reference to the runtime constant pool and method return address.</li>
+      </ol>
+
+      <div class="notes-section-title">🎯 3. The 4 Classic Interview Questions</div>
+      <div style="background:#09090b; border:1px solid #27272a; border-radius:6px; padding:10px 12px; margin-top:6px;">
+        <strong style="color:var(--accent-blue);">Q1: Is Java ever Pass-by-Reference?</strong><br>
+        <span style="color:#fafafa;">NO. 100% strictly Pass-by-Value.</span> For objects, the "value" is the memory address stored in the variable.
+      </div>
+
+      <div style="background:#09090b; border:1px solid #27272a; border-radius:6px; padding:10px 12px; margin-top:8px;">
+        <strong style="color:var(--accent-emerald);">Q2: What happens if you reassign a parameter inside a method?</strong><br>
+        <code>void test(Dog d) { d = new Dog(); }</code><br>
+        <span style="color:#fafafa;">The caller's remote is unaffected!</span> You only pointed the helper method's local copy of the remote to a new TV.
+      </div>
+
+      <div style="background:#09090b; border:1px solid #27272a; border-radius:6px; padding:10px 12px; margin-top:8px;">
+        <strong style="color:var(--accent-amber);">Q3: How do you trigger StackOverflowError vs OutOfMemoryError?</strong><br>
+        • Infinite recursion with no base case &rarr; Stack fills up trays &rarr; <code>StackOverflowError</code>.<br>
+        • Creating millions of objects in a loop saved in a list &rarr; Heap fills shelves &rarr; <code>OutOfMemoryError</code>.
+      </div>
+    </div>
+
+    <!-- Drawer Footer Actions -->
+    <div style="margin-top:14px; padding-top:12px; border-top:1px solid #27272a; display:flex; gap:8px;">
+      <button onclick="copyMasterNotes()" style="flex:1; background:#18181b; border:1px solid #27272a; color:#ffffff; padding:7px; border-radius:5px; font-size:11px; font-weight:700; cursor:pointer;">📋 Copy All Notes</button>
+      <button onclick="window.print()" style="flex:1; background:var(--accent-blue); border:none; color:#09090b; padding:7px; border-radius:5px; font-size:11px; font-weight:800; cursor:pointer;">🖨️ Print / PDF</button>
+    </div>
+  </div>
+
+  <!-- HUD Everywhere-Hover Tooltip Card -->
+  <div class="hud-tooltip-card" id="global-hud-tooltip">
+    <div class="hud-header">
+      <span class="hud-badge" id="hud-topic-badge">CONCEPT EXPLAINER // SIMPLE ENGLISH</span>
+      <span style="font-size:10px; color:#71717a; font-family:var(--font-mono);">Hover HUD</span>
+    </div>
+    <div class="hud-title" id="hud-title-txt">Stack Memory</div>
+    <div class="hud-analogy-box" id="hud-analogy-txt">
+      💡 <strong>Physical Analogy:</strong> Like your study desk: neat work trays for what you need right now.
+    </div>
+    <div class="hud-desc" id="hud-desc-txt">
+      Stores local primitive variables and method frames. Blazing fast, cleared the instant the method finishes.
+    </div>
+    <div class="hud-actions">
+      <button class="btn-hud-action" id="btn-hud-action" onclick="triggerHudAction()">
+        <span>⚡</span>
+        <span id="hud-action-label">Launch Explainer</span>
+      </button>
+      <button class="btn-hud-secondary" onclick="hideHudTooltip()">Close</button>
+    </div>
+  </div>
+
+  <!-- Interactive Deep Dive Modal Dialog -->
+  <div class="modal-backdrop" id="deepdive-backdrop" onclick="closeDeepdiveModal()"></div>
+  <div class="interactive-deepdive-modal" id="deepdive-modal">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #27272a; padding-bottom:10px; margin-bottom:14px;">
+      <div style="font-size:13px; font-weight:800; color:#ffffff; display:flex; align-items:center; gap:8px;">
+        <span style="background:rgba(56,189,248,0.15); color:var(--accent-blue); padding:2px 8px; border-radius:4px; font-family:var(--font-mono); font-size:11px;">PATHWAY EXPLORER</span>
+        <span id="modal-title">Memory Deep Dive</span>
+      </div>
+      <button onclick="closeDeepdiveModal()" style="background:transparent; border:none; color:#a1a1aa; font-size:16px; cursor:pointer;">✕</button>
+    </div>
+    <div id="modal-body-content" style="font-size:12.5px; line-height:1.6; color:#cbd5e1; max-height:60vh; overflow-y:auto;">
+      <!-- Content populated dynamically -->
+    </div>
+    <div style="margin-top:16px; display:flex; justify-content:flex-end; gap:8px;">
+      <button onclick="closeDeepdiveModal()" style="background:var(--accent-blue); color:#09090b; border:none; padding:7px 16px; border-radius:5px; font-weight:800; font-size:11.5px; cursor:pointer;">Got It 👍</button>
     </div>
   </div>
 

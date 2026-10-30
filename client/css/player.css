@@ -778,3 +778,375 @@ html, body {
   border-color: var(--accent-blue);
   color: var(--accent-blue);
 }
+
+/* ==========================================================================
+   BI-DIRECTIONAL VISUAL SYNC FOCUS & HUD TOOLTIP SYSTEM
+   ========================================================================== */
+
+/* Active Sync Focus: blackboard element highlighted in sync with instructor speech */
+.sync-focused {
+  border-color: var(--accent-blue) !important;
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.32), inset 0 0 12px rgba(56, 189, 248, 0.08) !important;
+  transform: translateY(-2px) scale(1.018);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sync-focused-emerald {
+  border-color: var(--accent-emerald) !important;
+  box-shadow: 0 0 24px rgba(52, 211, 153, 0.32), inset 0 0 12px rgba(52, 211, 153, 0.08) !important;
+  transform: translateY(-2px) scale(1.018);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sync-focused-amber {
+  border-color: var(--accent-amber) !important;
+  box-shadow: 0 0 24px rgba(251, 191, 36, 0.32), inset 0 0 12px rgba(251, 191, 36, 0.08) !important;
+  transform: translateY(-2px) scale(1.018);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* On-Screen Text Real-Time Highlight Follower */
+.sync-text-highlight {
+  background: rgba(56, 189, 248, 0.22);
+  color: #ffffff !important;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border-bottom: 2px solid var(--accent-blue);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+  transition: all 0.25s ease;
+}
+
+/* Interactive Info (i) Bubbles */
+.info-bubble-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: var(--accent-blue);
+  font-size: 10px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  margin-left: 6px;
+  vertical-align: middle;
+  transition: all 0.2s ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.info-bubble-btn:hover {
+  background: var(--accent-blue);
+  color: #09090b;
+  transform: scale(1.22);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+}
+
+/* Everywhere-Hover HUD Tooltip Card */
+.hud-tooltip-card {
+  position: fixed;
+  z-index: 1000;
+  width: 320px;
+  background: #141418;
+  border: 1px solid var(--accent-blue);
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.85), 0 0 20px rgba(56, 189, 248, 0.2);
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  backdrop-filter: blur(12px);
+  display: none;
+}
+
+.hud-tooltip-card.hud-visible {
+  opacity: 1;
+  transform: translateY(0);
+  display: block;
+}
+
+.hud-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #27272a;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+}
+
+.hud-badge {
+  font-size: 9.5px;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  color: var(--accent-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.hud-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 6px;
+}
+
+.hud-analogy-box {
+  background: rgba(56, 189, 248, 0.08);
+  border-left: 3px solid var(--accent-blue);
+  padding: 6px 10px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  font-size: 11.5px;
+  color: #e2e8f0;
+  line-height: 1.45;
+}
+
+.hud-desc {
+  font-size: 11.5px;
+  color: #a1a1aa;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.hud-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-hud-action {
+  flex: 1;
+  background: var(--accent-blue);
+  color: #09090b;
+  border: none;
+  border-radius: 5px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.btn-hud-action:hover {
+  background: #7dd3fc;
+  transform: translateY(-1px);
+}
+
+.btn-hud-secondary {
+  background: #27272a;
+  color: #e4e4e7;
+  border: 1px solid #3f3f46;
+  border-radius: 5px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-hud-secondary:hover {
+  border-color: var(--accent-blue);
+  color: #ffffff;
+}
+
+/* Modal Toast for Interactive Deep Dive Explanations */
+.interactive-deepdive-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.92);
+  width: 90%;
+  max-width: 520px;
+  background: #141418;
+  border: 1px solid var(--accent-blue);
+  border-radius: 12px;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.9);
+  z-index: 1200;
+  padding: 22px 24px;
+  display: none;
+  opacity: 0;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.interactive-deepdive-modal.modal-active {
+  display: block;
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1150;
+  display: none;
+  backdrop-filter: blur(4px);
+}
+
+.modal-backdrop.backdrop-active {
+  display: block;
+}
+
+/* ==========================================================================
+   PROMINENT (i) BUBBLES, DUAL-VIEW TOGGLE & EXPANDED STUDY NOTES STYLES
+   ========================================================================== */
+
+/* Upgraded Prominent (i) Info Badges */
+.info-bubble-btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 50%;
+  background: rgba(56, 189, 248, 0.16) !important;
+  border: 1.5px solid var(--accent-blue) !important;
+  color: #ffffff !important;
+  font-size: 11.5px !important;
+  font-weight: 800 !important;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  margin-left: 8px;
+  vertical-align: middle;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+  line-height: 1;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+}
+
+.info-bubble-btn:hover {
+  background: var(--accent-blue) !important;
+  color: #09090b !important;
+  transform: scale(1.22);
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.7) !important;
+}
+
+/* Dual-View Mode Switcher (Metaphor vs Real Physical RAM) */
+.view-mode-toggle {
+  display: inline-flex;
+  background: #18181b;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.btn-view-mode {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-view-mode:hover {
+  color: #ffffff;
+}
+
+.btn-view-mode.active-view {
+  background: var(--accent-blue);
+  color: #09090b;
+  font-weight: 800;
+}
+
+/* Study Notes Drawer Tabs & Professional Content */
+.notes-tabs-row {
+  display: flex;
+  background: #18181b;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.btn-notes-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #a1a1aa;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.btn-notes-tab:hover {
+  color: #ffffff;
+}
+
+.btn-notes-tab.notes-tab-active {
+  background: var(--accent-blue);
+  color: #09090b;
+  font-weight: 800;
+}
+
+.notes-cheatsheet-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  margin: 12px 0;
+  background: #09090b;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+}
+
+.notes-cheatsheet-table th {
+  background: #18181b;
+  color: #ffffff;
+  padding: 6px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+}
+
+.notes-cheatsheet-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid #1f1f23;
+  color: #cbd5e1;
+}
+
+.notes-cheatsheet-table tr:last-child td {
+  border-bottom: none;
+}
+
+.notes-callout-card {
+  background: rgba(56, 189, 248, 0.08);
+  border-left: 3px solid var(--accent-blue);
+  border-radius: 4px;
+  padding: 10px 12px;
+  margin: 12px 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #e2e8f0;
+}
+
+.notes-section-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: var(--font-mono);
+  margin-top: 14px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
